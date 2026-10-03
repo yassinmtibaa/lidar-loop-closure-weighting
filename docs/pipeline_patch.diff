@@ -1,0 +1,11 @@
+--- /home/yassine/.local/share/pipx/venvs/kiss-icp/lib/python3.12/site-packages/kiss_icp/pipeline.py.bak	2026-10-03 12:26:47.160478926 +0100
++++ /home/yassine/.local/share/pipx/venvs/kiss-icp/lib/python3.12/site-packages/kiss_icp/pipeline.py	2026-10-03 12:26:47.163426545 +0100
+@@ -127,7 +127,7 @@
+                 for idx in range(len(poses)):
+                     tx, ty, tz = poses[idx, :3, -1].flatten()
+                     qw, qx, qy, qz = Quaternion(matrix=poses[idx], atol=0.01).elements
+-                    tum_data[idx] = np.r_[float(timestamps[idx]), tx, ty, tz, qx, qy, qz, qw]
++                    tum_data[idx] = np.r_[float(np.ravel(timestamps[idx])[0]), tx, ty, tz, qx, qy, qz, qw]
+                 tum_data.flatten()
+                 return tum_data.astype(np.float64)
+ 

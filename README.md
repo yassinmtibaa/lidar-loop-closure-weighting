@@ -1,0 +1,26 @@
+# LiDAR preprocessing + learned feedback loop
+
+Goal: improve LiDAR odometry/mapping on real data with filtering and a learned
+component trained against a downstream metric, then use the result to make
+simulation more realistic.
+
+## Setup
+- See docs/environment.md for hardware and versions.
+- ROS 2 Jazzy on Ubuntu 24.04, workspace ~/ros2_ws.
+- KISS-ICP and evo installed with pipx.
+- KISS-ICP needs a one-line patch (TUM export crash on newer NumPy):
+  see docs/pipeline_patch.diff. Reapply after any pipx upgrade/reinstall.
+
+## Data
+KITTI Odometry (Velodyne, calib, poses) unzipped to
+data/kitti/dataset/{sequences,poses}. Not tracked in git.
+
+## Reproduce the baseline
+    ./scripts/run_baseline.sh baseline
+    ./scripts/eval_exp.sh baseline > results/baseline.csv
+
+## Layout
+- scripts/  run and evaluation scripts
+- configs/  one KISS-ICP config per experiment
+- results/  experiment registry, CSV summaries (raw runs are not tracked)
+- docs/     lab log, decisions, figures
