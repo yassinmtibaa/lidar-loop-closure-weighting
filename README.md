@@ -24,3 +24,9 @@ data/kitti/dataset/{sequences,poses}. Not tracked in git.
 - configs/  one KISS-ICP config per experiment
 - results/  experiment registry, CSV summaries (raw runs are not tracked)
 - docs/     lab log, decisions, figures
+
+## Environment notes (pipx)
+- PyYAML injected into the KISS-ICP env: pipx inject kiss-icp pyyaml
+- KISS-SLAM env needs: pipx inject kiss-slam pillow matplotlib
+- KISS-ICP env needs a one-line patch for the TUM export (docs/pipeline_patch.diff).
+  The KISS-SLAM env did not hit that bug.
