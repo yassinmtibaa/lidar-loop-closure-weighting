@@ -8,4 +8,4 @@
 | minrange3 | 2026-10-03 | 1542e57 | configs/minrange3.yml | min_range 3 | removes self-returns; tiny effect | | |
 | vox05 | 2026-10-03 | 1542e57 | configs/vox05.yml | voxel 0.5 | finer map, slightly better RPE, slower | | |
 | vox2 | 2026-10-03 | 1542e57 | configs/vox2.yml | voxel 2.0 | coarser map, faster, worse | | |
-| slam_default | 2026-10-03 | (fill) | configs/kiss_slam_default.yaml | KISS-SLAM defaults (loop closure + pose graph) | ATE drops clearly on looped seqs (00,02,05,06,07,09); ~equal to baseline on loop-free seqs (01,03,04,10); seq 08 uncertain; false closures are the main risk | | |
+| slam_default | 2026-10-03 | fe28141 | configs/kiss_slam_default.yaml | KISS-SLAM defaults (loop closure + pose graph) | ATE drops clearly on looped seqs (00,02,05,06,07,09); ~equal to baseline on loop-free seqs (01,03,04,10); seq 08 uncertain; false closures are the main risk | ATE -74/-71/-56/-22% on 00/02/05/06; 07 (1 closure) and 09 (0) no gain; 08 +11%; RPE +39% on 05, mean RPE +5.1% | win on ATE where closures found; RPE regression, missed closures on 07/09, 08 worse |
