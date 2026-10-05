@@ -84,3 +84,13 @@ the slam_default_rerun numbers, so the first default run is the odd one (00: 0.9
 cause unknown, 1 odd run in ~8; 02: 2-closure state 1.8537 vs 1-closure 1.9157).
 Next hypothesis: piecewise-rigid per-local-map correction creates steps at 100 m boundaries.
 Test: scripts/step_jumps.py (control 04, no closures).
+
+## 2026-10-03: no-closure test (previous hypothesis rejected)
+overlap_threshold 1.0 -> 0 closures on 00/02/04/05. KITTI trans%: 05 odom 0.342, noclosure 0.349,
+default 0.517; 00: 0.528/0.532/0.573; 02: 0.537/0.543/0.580; 04 identical. 86-96% of the
+odometry->default gap appears only when closures are applied. KISS-SLAM internal odometry is NOT the
+cause (retracting the 04-control inference). ATE without closures still moves -4%/+6% vs baseline
+(noise-level). Remaining cause: how the pose-graph correction is distributed over frames. All 14
+closures are accurate (audit v2), no boundary spikes (step test), all graph edges carry identical
+information matrices. Example: 05 seg 10 changed 1.30 m vs odometry error 0.50 m (RPE 0.50 -> 1.89).
+Next: read slam.py / pose_graph_optimizer.py to see how corrected poses are produced.
