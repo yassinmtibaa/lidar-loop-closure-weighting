@@ -76,3 +76,11 @@ predict error. KITTI translation error (100-800 m) is worse with SLAM: 00 +8.5%,
 05 +51%, 06 +16%, 08 +16% (test seq, not tuned on), mean ~+10%. SLAM improves ATE but costs
 local accuracy even with accurate closures. Suspect: pose-graph weighting (all edges carry
 identical information matrices) and/or iteration limit (10). Both untested.
+
+## 2026-10-03: pose-graph iteration test
+max_iterations 10 vs 50 vs 100: identical on 05 (deterministic) to 6 digits; KITTI trans. error
+0.517% in all three. Rejected (rule: >=10% gain on 05). The pgo50/100 numbers on 00 and 02 equal
+the slam_default_rerun numbers, so the first default run is the odd one (00: 0.9072 vs 0.9168,
+cause unknown, 1 odd run in ~8; 02: 2-closure state 1.8537 vs 1-closure 1.9157).
+Next hypothesis: piecewise-rigid per-local-map correction creates steps at 100 m boundaries.
+Test: scripts/step_jumps.py (control 04, no closures).
