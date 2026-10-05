@@ -94,3 +94,12 @@ cause (retracting the 04-control inference). ATE without closures still moves -4
 closures are accurate (audit v2), no boundary spikes (step test), all graph edges carry identical
 information matrices. Example: 05 seg 10 changed 1.30 m vs odometry error 0.50 m (RPE 0.50 -> 1.89).
 Next: read slam.py / pose_graph_optimizer.py to see how corrected poses are produced.
+
+## 2026-10-03: code read (slam.py, pose_graph_optimizer.py); step test was blind to rotation
+Final poses = node.keypose @ rel_pose: rigid per 100 m local map. All factors (odometry between maps
+AND closures) use np.eye(6): radians and metres weighted equally, so rotation residuals are nearly
+free. Maps split on straight-line distance from origin. fine_grained_optimization (per-scan smoother)
+exists; unknown whether saved poses use it. RETRACTION: step_jumps.py measured translation only, so
+"no boundary kinks" was wrong; a heading kink of 0.5 deg displaces the next 100 m by ~0.9 m, the
+size of the RPE regressions (unverified). Prediction for step_jumps2: >=25% of rotation diff within
++-1 frame of boundaries on 05/00; control 04 ~2%.
