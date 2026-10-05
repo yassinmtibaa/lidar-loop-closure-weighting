@@ -60,3 +60,19 @@ acceptance threshold; cause unverified). Corrections: the 02 differences in the 
 sweep are noise; 07's +4.8% ATE under ovl06 is real (07 has zero spread), as is 00's +2.7%
 (two fewer closures). ovl06 is a provisional tradeoff, not a new default.
 Rule from now on: compare 02 only over repeated runs; 05/06/07 single runs are enough.
+
+## 2026-10-03: closure audit definition
+For each closure edge in KISS-SLAM's local_map_graph.g2o, compare its relative pose with the
+ground-truth relative pose between the matched scans. BAD if translation error > 1.0 m or
+rotation error > 2.0 deg; otherwise GOOD. Reference: same error for consecutive (odometry)
+edges. Audited sequences: 00, 02, 05 only (tuning set). 06-07 (validation) and 08-10 (test)
+are not audited now, to keep them clean. Caveat: the g2o file has no closure scores.
+
+## 2026-10-03: closure audit v2 (vs odometry-chain error)
+All 14 accepted closures on 00/02/05 are more accurate than the odometry between the same
+scans (ratios ~2-10x; weakest 9<->0 on 00: 3.29 vs 3.76 m). No bad closures on tuning seqs,
+so a learned verifier has no target there. Overlap (0.47-0.82 accepted) does not visibly
+predict error. KITTI translation error (100-800 m) is worse with SLAM: 00 +8.5%, 02 +8.0%,
+05 +51%, 06 +16%, 08 +16% (test seq, not tuned on), mean ~+10%. SLAM improves ATE but costs
+local accuracy even with accurate closures. Suspect: pose-graph weighting (all edges carry
+identical information matrices) and/or iteration limit (10). Both untested.

@@ -17,3 +17,5 @@
 | slam_ovl06 | 2026-10-03 | 15afec0 | configs/slam_ovl06.yaml | overlap_threshold 0.6 | same, stronger | mean RPE -4.4%; 05 ATE -44%, RPE -25%; 00/02 ATE +2.7/+3.3%; closures 5/1/2 | provisional: big real gain on 05 (5->2 closures), small real costs on 00 (+2.7% ATE) and 07 (+4.8% ATE, loses its only closure); evidence is one sequence |
 | slam_inl10 | 2026-10-03 | 15afec0 | configs/slam_inl10.yaml | inliers_threshold 10 | stricter detector; fewer weak closures | 02 loses both closures, ATE +270% | rejected |
 | slam_ham35 | 2026-10-03 | 15afec0 | configs/slam_ham35.yaml | hamming_distance_threshold 35 | stricter feature matching | mean RPE 0.0%; 05 ATE +19% | rejected |
+| slam_pgo50 | 2026-10-03 | (fill) | configs/slam_pgo50.yaml | pose-graph max_iterations 50 | default may stop before convergence; if so KITTI trans. error on 05 improves; if graph already converged, no change | | |
+| slam_pgo100 | 2026-10-03 | (fill) | configs/slam_pgo100.yaml | pose-graph max_iterations 100 | same, stronger | | |
