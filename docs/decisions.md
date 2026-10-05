@@ -39,3 +39,9 @@ Candidate if mean RPE over 00-05 improves >= 2% vs slam_default AND mean ATE ove
 looped seqs (00, 02, 05) worsens <= 10% AND no tuning seq worsens ATE > 25%.
 Candidates then checked once on validation 06-07. Only 3 looped tuning seqs: high
 overfitting risk, so any winner needs the validation check before it is kept.
+
+## 2026-10-03: validation criterion for slam_ovl06
+slam_ovl06 passes on validation seqs 06-07 if, vs slam_default, mean RPE does not
+worsen by more than 2% and neither sequence's ATE worsens by more than 25%.
+Test seqs 08-10 stay untouched. Determinism of KISS-SLAM is checked first
+(rerun of slam_default on 00, 02, 05).
