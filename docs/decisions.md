@@ -103,3 +103,15 @@ exists; unknown whether saved poses use it. RETRACTION: step_jumps.py measured t
 "no boundary kinks" was wrong; a heading kink of 0.5 deg displaces the next 100 m by ~0.9 m, the
 size of the RPE regressions (unverified). Prediction for step_jumps2: >=25% of rotation diff within
 +-1 frame of boundaries on 05/00; control 04 ~2%.
+
+## 2026-10-03: code read + rotation-aware step test
+Code: final poses are node.keypose @ rel_pose per map, but pipeline.py line 81 assigns the saved poses
+from fine_grained_optimization() (per-scan smoother, all factors np.eye(6)). Rigid per-map kinks
+hypothesis REJECTED: step_jumps2 shows 3% (05), 2% (00), 4% (04 control) of rotation difference within
++-1 frame of map boundaries, equal to the fraction of such frames; predicted >=25%. Rotation
+differences tiny (median 0.02 deg, max 0.24 deg). The -rs flag does not change saved poses and crashes
+(map_closures lacks align_map_to_local_ground, library mismatch); irrelevant to our metrics.
+Current hypothesis (from code reading, unverified): identity weights spread each correction evenly
+over a map's scans regardless of where odometry actually drifted. Prediction for
+correction_alignment.py on 05: corr(|change|,|odo err|) < 0.3 and mean delivered < 0.5; corr >= 0.6
+with delivered near 1 would mean corrections are well targeted and the cause is elsewhere (e.g. closure noise).
