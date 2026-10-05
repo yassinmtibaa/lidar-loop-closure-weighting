@@ -32,3 +32,10 @@ Candidate if mean RPE over 00-05 improves >= 2% vs slam_default AND mean ATE ove
 looped seqs (00, 02, 05) worsens <= 10% AND no tuning seq worsens ATE > 25%.
 Candidates then checked once on validation 06-07. Only 3 looped tuning seqs: high
 overfitting risk, so any winner needs the validation check before it is kept.
+
+## 2026-10-03: acceptance rule for loop-closure experiments
+Run on tuning sequences 00-05, compared against slam_default (not odometry).
+Candidate if mean RPE over 00-05 improves >= 2% vs slam_default AND mean ATE over
+looped seqs (00, 02, 05) worsens <= 10% AND no tuning seq worsens ATE > 25%.
+Candidates then checked once on validation 06-07. Only 3 looped tuning seqs: high
+overfitting risk, so any winner needs the validation check before it is kept.

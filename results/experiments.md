@@ -13,3 +13,7 @@
 | slam_ovl06 | 2026-10-03 | (fill) | configs/slam_ovl06.yaml | overlap_threshold 0.6 | same, stronger | | |
 | slam_inl10 | 2026-10-03 | (fill) | configs/slam_inl10.yaml | inliers_threshold 10 | stricter detector; fewer weak closures | | |
 | slam_ham35 | 2026-10-03 | (fill) | configs/slam_ham35.yaml | hamming_distance_threshold 35 | stricter feature matching | | |
+| slam_ovl05 | 2026-10-03 | (fill) | configs/slam_ovl05.yaml | overlap_threshold 0.5 | stricter closure acceptance; fewer closures; 05 RPE improves, ATE gain shrinks; risk: lose 00/02 gains | | |
+| slam_ovl06 | 2026-10-03 | (fill) | configs/slam_ovl06.yaml | overlap_threshold 0.6 | same, stronger | | |
+| slam_inl10 | 2026-10-03 | (fill) | configs/slam_inl10.yaml | inliers_threshold 10 | stricter detector; fewer weak closures | | |
+| slam_ham35 | 2026-10-03 | (fill) | configs/slam_ham35.yaml | hamming_distance_threshold 35 | stricter feature matching | | |
