@@ -45,3 +45,10 @@ slam_ovl06 passes on validation seqs 06-07 if, vs slam_default, mean RPE does no
 worsen by more than 2% and neither sequence's ATE worsens by more than 25%.
 Test seqs 08-10 stay untouched. Determinism of KISS-SLAM is checked first
 (rerun of slam_default on 00, 02, 05).
+
+## 2026-10-03: KISS-SLAM is not deterministic
+Rerun of slam_default: 00 ATE +1.1%, 02 ATE +3.3%, RPE -1.2%; 05 identical to 1e-5.
+Differences of this size between configs on 00/02 are noise. The 05 effects (ovl05 +48%,
+ovl06 -44% ATE) exceed noise. From now on, an effect counts only if it exceeds the
+measured spread over 5 runs. slam_ovl06 passes the validation rule on 06-07 but the
+validation is uninformative (06 identical, 07 lost its only closure): provisional only.
