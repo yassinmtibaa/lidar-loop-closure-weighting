@@ -269,3 +269,11 @@ returns 1.3-1.4x noisier than the 0.2-0.3 bin (homogeneous, all 5 seqs); (3) tra
 Model status: parametric table sufficient; no learned model justified. Validation caveat: injecting
 sigma and re-measuring with the same estimator matches by construction (tests wiring, not realism).
 Next: check whether Gazebo gpu_lidar output has intensity (read-only), then refit with homogeneous triples.
+
+## 2026-10-03: Gazebo gpu_lidar output (example world, headless server works)
+Topics /lidar, /lidar/points. PointCloud2 fields: x,y,z (float32), intensity (float32, offset 16),
+ring (uint16, offset 24); organized 16x640 = the example's 16 vertical x 640 horizontal samples.
+Ring gives beam id directly. Not yet known: intensity values, point_step, non-return encoding.
+Predictions for inspect_cloud.py: 10,240 points; intensity 1-3 distinct values (laser_retro default);
+ring 0-15 = row index; misses are non-finite coordinates in the organized cloud.
+If intensity is constant, intensity effects need laser_retro assigned per surface in our own world.
