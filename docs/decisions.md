@@ -244,3 +244,15 @@ RETRACTED: 'dropouts depend on elevation' (one scan); lowest beams do have lower
 Next: intensity vs sigma. Predictions: at 5-10 m sigma(lowest populated intensity bin) >= 1.2x
 sigma(highest); median road intensity of 06 < that of 00/02/05/07. If neither: intensity does not
 explain the +-20% between-sequence spread.
+
+## 2026-10-03: intensity vs ring noise (00/02/05/06/07, ground, every 20th scan)
+Predictions: sigma(lowest bin) >= 1.2x sigma(highest) at 3-10 m -> observed 0.53-0.78 (reversed);
+06 median ground intensity lower than others -> 0.320 vs 0.300-0.310 (reversed, small).
+Finding: sigma is U-shaped in intensity. 3-10 m: dim (<0.2) 1.2-1.4x the 0.2-0.5 bins (4/5 seqs);
+bright (>0.5, ~3% of ground points) 1.7-1.8x (by hand: 1.83/1.67/1.83/1.72/1.76); 10-20 m 1.8-2.5x;
+20-40 m 1.6-2.2x. Effect consistent across seqs, bigger than the +-20% between-sequence spread.
+06 is not explained by intensity: its dominant 0.3-0.5 bin is +40% (3-10 m) and +75% (10-20 m)
+vs the others, gone at 20-40 m; cause unknown. Alternatives for the bright-bin effect: genuine noise
+vs range bias at paint edges. Test (ring_intensity2.py): predictions A: sigma_same(0.5-1.0, 3-10 m)
+< 1.2 cm in all 5 seqs; B: |median d2| in 0.5-1.0 >= 1 mm, <= 0.3 mm in 0.3-0.5. A fails
+(>= 1.35 cm): genuine intensity-dependent noise.
