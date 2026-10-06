@@ -151,3 +151,8 @@ tuning seqs, 5 closures on 05). Hypothesis: matters on 05 because odometry is al
 Decision: do not adopt ovl06 as default (07: -1 closure, ATE +4.8%); drop learned closure
 selection (insufficient labeled data); stop mining KISS-SLAM; validation (06-07) and test (08-10)
 remain unused for further tuning. Next direction: simulation / sensor noise model.
+
+## 2026-10-03: direction C started (sensor noise model for simulation)
+Gazebo Sim 8.15.0 (Harmonic), gpu_lidar available, ros_gz installed, no Velodyne packages.
+Step 1: KITTI ground-plane residual sigma by range (upper bound: includes road roughness).
+Prediction: MAD-sigma at 30-40 m >= 2x sigma at 5-10 m. Fit on seqs 00-05, check on 06-07, 08-10 untouched.
