@@ -156,3 +156,14 @@ remain unused for further tuning. Next direction: simulation / sensor noise mode
 Gazebo Sim 8.15.0 (Harmonic), gpu_lidar available, ros_gz installed, no Velodyne packages.
 Step 1: KITTI ground-plane residual sigma by range (upper bound: includes road roughness).
 Prediction: MAD-sigma at 30-40 m >= 2x sigma at 5-10 m. Fit on seqs 00-05, check on 06-07, 08-10 untouched.
+
+## 2026-10-03: KITTI ground noise measurement (prediction failed)
+Prediction sigma(30-40 m)/sigma(5-10 m) >= 2: observed 1.37 (00), 1.14 (02), 1.20 (05). Curve flat ~7-8 cm
+beyond 10-20 m; sequences differ at 5-10 m (5.5/6.9/5.9 cm). Conclusion: road geometry (one plane per
+annulus) dominates, so the number is an upper bound, not sensor noise (HDL-64E datasheet ~2 cm is from
+memory, unverified). No noise model fitted from this. Usable: ~122-126k points/scan mean (max ~128k),
+99th/99.9th pct range 50/74 m, elevation -24.3..-24.6 deg at 0.1th pct (99.9th pct +4.7..+4.9 deg, above
+the recalled +2: unresolved).
+Next: per-beam range deviation along azimuth on ground points (needs beam layout), fit on 00-05,
+check 06-07, 08-10 untouched. Prediction: a constant-sigma Gaussian (1-3 cm) will describe it, in which
+case no learned model is justified for this part.
