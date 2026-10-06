@@ -124,3 +124,12 @@ RMS error 0.48 m; ATE 1.49 m over 21 segments is ~0.07 m/segment if spread evenl
 the span of the closure cluster 7<->3, 8<->4, 9<->5 (frames 445-1502); segs 12-20 mostly < 0.13 m.
 Hypothesis (untested): redundant, mutually inconsistent closures + identity weights inject error.
 Check: slam_ovl06 (2 closures) segs 3-11 RMS change predicted < 0.4 m; > 0.6 m would refute.
+
+## 2026-10-03: correction_alignment results
+Prediction (05: corr<0.3, delivered<0.5) met: 05 corr 0.13 / delivered 0.05; 00 -0.11 / 0.01;
+02 0.23 / -0.02 (04 has 3 segments, uninformative). RMS change per segment on 05 ~0.49 m vs odometry
+RMS error 0.48 m; ATE 1.49 m over 21 segments is ~0.07 m/segment if spread evenly, so changes are
+~7x larger than drift correction needs. Changes concentrate in segs 3-11 (frames ~420-1617, RMS ~0.72 m),
+the span of the closure cluster 7<->3, 8<->4, 9<->5 (frames 445-1502); segs 12-20 mostly < 0.13 m.
+Hypothesis (untested): redundant, mutually inconsistent closures + identity weights inject error.
+Check: slam_ovl06 (2 closures) segs 3-11 RMS change predicted < 0.4 m; > 0.6 m would refute.
