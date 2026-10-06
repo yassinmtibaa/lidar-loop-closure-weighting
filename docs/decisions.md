@@ -133,3 +133,12 @@ RMS error 0.48 m; ATE 1.49 m over 21 segments is ~0.07 m/segment if spread evenl
 the span of the closure cluster 7<->3, 8<->4, 9<->5 (frames 445-1502); segs 12-20 mostly < 0.13 m.
 Hypothesis (untested): redundant, mutually inconsistent closures + identity weights inject error.
 Check: slam_ovl06 (2 closures) segs 3-11 RMS change predicted < 0.4 m; > 0.6 m would refute.
+
+## 2026-10-03: closure-cluster check (prediction confirmed)
+slam_ovl06 on 05 keeps 2 of 5 closures (8<->4 err 0.12 m, 15<->0 err 0.24 m; dropped 7<->3 0.87 m,
+9<->5 0.45, 17<->5 0.42). RMS change in segs 3-11: default 0.724 m -> ovl06 0.064 m (predicted <0.4,
+refute >0.6). 05 per-segment RPE rmse: odo 0.481, default 0.694, ovl06 0.505; ATE ~0.37 vs 0.66 m.
+Established: the large corrections come from the dropped closures. Not established: which one(s) or
+why. Suspect 7<->3 (largest error, parallel to 8<->4). Revised plan: leave-one-out on 05 (needs a
+small slam.py patch to skip closure pairs), NOT uniform downweighting. 2 survivors also have the
+highest overlaps (0.70, 0.82): confound, 5 points. Free generalization check on 00/02 first.
