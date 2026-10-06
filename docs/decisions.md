@@ -175,3 +175,12 @@ deg (bottom ~3 deg missing though 0.1th pct reaches -24.3, cause unknown). Usabl
 (64 beams, ~-24.5..+2.4 deg, 360 deg, range ~75 m), not as exact beam angles. Gazebo gpu_lidar example
 has uniform vertical spacing, so a uniform sensor will misplace beams by a fraction of a degree.
 Next: check whether .bin order encodes the beam (wrap-arounds ~64?) for a per-beam noise measurement.
+
+## 2026-10-03: KITTI .bin ordering
+Prediction (beam-ordered file): met. 99% of consecutive points < 0.15 deg elevation apart (median
+0.003), azimuth step ~0.18 deg. 72 seam wrap-arounds != 64 (unexplained; wraps are the wrong boundary
+detector, beams are separated by azimuth drops). Dropouts are structured: top beam (+2.1..2.2 deg) has
+a 7.8 deg gap in its first points (sky), so dropout depends on elevation.
+Next: ring_noise.py (second-difference range noise per beam on ground, fit on 00-05).
+Predictions: 60-70 beams/scan; sigma 1-3 cm per bin; ratio sigma(30-40)/sigma(5-10) < 2.
+If sigma > 4 cm: KITTI cannot give a sensor-noise number, stop that line.
