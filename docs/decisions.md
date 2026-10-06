@@ -184,3 +184,12 @@ a 7.8 deg gap in its first points (sky), so dropout depends on elevation.
 Next: ring_noise.py (second-difference range noise per beam on ground, fit on 00-05).
 Predictions: 60-70 beams/scan; sigma 1-3 cm per bin; ratio sigma(30-40)/sigma(5-10) < 2.
 If sigma > 4 cm: KITTI cannot give a sensor-noise number, stop that line.
+
+## 2026-10-03: ring noise measurement (00/02/05, every 20th scan)
+Predictions: 60-70 beams/scan -> exactly 64 (met); sigma 1-3 cm per bin -> MAD 0.84-1.83 cm, 3-10 m bins
+just under 1 cm (mostly met); sigma(30-40)/sigma(5-10) < 2 -> 1.83/2.08/1.83 (2 of 3; std-based 2.3-2.6).
+MAD sigma 4-8x below plane-fit (road shape dominated plane-fit). Consistent across seqs (+-5% near,
++-10% far). std/MAD 1.3-2.2: heavy tails (sensor vs scene unresolved). Flat road <= 40 m only.
+Checks (predictions fixed now): stride-2 sigma within 15% of stride-1 at 5-10 m (else noise is
+correlated, sigma underestimated); fit on 00-05 predicts 06/07 per-bin within 20%; 64 distinct beam
+elevations, ~+2..2.6 to ~-24..-25 deg, min gap >= 0.1 deg; fill < 0.6 above 0 deg, > 0.85 below -10 deg.
