@@ -167,3 +167,11 @@ the recalled +2: unresolved).
 Next: per-beam range deviation along azimuth on ground points (needs beam layout), fit on 00-05,
 check 06-07, 08-10 untouched. Prediction: a constant-sigma Gaussian (1-3 cm) will describe it, in which
 case no learned model is justified for this part.
+
+## 2026-10-03: KITTI beam layout (seq 00 scan 0)
+Prediction 55-64 peaks, non-uniform spacing, span +2..-25: observed 67 peaks (not met; likely
+double-counted beams, eight 0.10 deg gaps), spacing 0.10-2.65 deg non-uniform (met), peaks +2.43..-21.57
+deg (bottom ~3 deg missing though 0.1th pct reaches -24.3, cause unknown). Usable for a rough sensor
+(64 beams, ~-24.5..+2.4 deg, 360 deg, range ~75 m), not as exact beam angles. Gazebo gpu_lidar example
+has uniform vertical spacing, so a uniform sensor will misplace beams by a fraction of a degree.
+Next: check whether .bin order encodes the beam (wrap-arounds ~64?) for a per-beam noise measurement.
