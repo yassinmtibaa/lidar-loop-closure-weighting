@@ -256,3 +256,16 @@ vs the others, gone at 20-40 m; cause unknown. Alternatives for the bright-bin e
 vs range bias at paint edges. Test (ring_intensity2.py): predictions A: sigma_same(0.5-1.0, 3-10 m)
 < 1.2 cm in all 5 seqs; B: |median d2| in 0.5-1.0 >= 1 mm, <= 0.3 mm in 0.3-0.5. A fails
 (>= 1.35 cm): genuine intensity-dependent noise.
+
+## 2026-10-03: intensity test v2 (same-bin triples), 00/02/05/06/07
+A (bright-bin sigma_same < 1.2 cm at 3-10 m, all seqs): met, 0.88/0.73/0.76/0.77/0.88 (all-triples 1.37-2.03).
+B (median d2 >= 1 mm in bright bin; <= 0.3 mm in 0.3-0.5): first half met (+12.1..+20.9 mm, 5/5);
+second half 3/5 (-0.23/-0.20/-0.20/-0.32/-1.31 mm).
+RETRACTED: 'bright points 1.7-1.8x noisier'. Edge artifact. Real effects: (1) bright returns read ~6-10 mm
+closer than asphalt neighbours (d2/2; range walk is a plausible, unverified mechanism); (2) dim (<0.1)
+returns 1.3-1.4x noisier than the 0.2-0.3 bin (homogeneous, all 5 seqs); (3) transitions inflated sigma
+~10% in main bins -> earlier fit a=0.86 cm likely ~10% high at near range, needs refit.
+06 unexplained: 0.3-0.5 bin sigma_same 1.15 (3-10 m) / 1.71 (10-20 m) vs 0.78-0.82 / 0.94-0.97 elsewhere.
+Model status: parametric table sufficient; no learned model justified. Validation caveat: injecting
+sigma and re-measuring with the same estimator matches by construction (tests wiring, not realism).
+Next: check whether Gazebo gpu_lidar output has intensity (read-only), then refit with homogeneous triples.
