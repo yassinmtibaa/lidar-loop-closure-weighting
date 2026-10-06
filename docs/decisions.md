@@ -193,3 +193,20 @@ MAD sigma 4-8x below plane-fit (road shape dominated plane-fit). Consistent acro
 Checks (predictions fixed now): stride-2 sigma within 15% of stride-1 at 5-10 m (else noise is
 correlated, sigma underestimated); fit on 00-05 predicts 06/07 per-bin within 20%; 64 distinct beam
 elevations, ~+2..2.6 to ~-24..-25 deg, min gap >= 0.1 deg; fill < 0.6 above 0 deg, > 0.85 below -10 deg.
+
+## 2026-10-03: ring noise checks (8 seqs, every 20th scan; fit on 00-05)
+Whiteness (stride-2/stride-1, 5-10 m): pooled 1.05, per seq 0.98-1.08 -> met (<=1.15). At 30-40 m
+1.14-1.44 (scene curvature or correlation; if curvature variance scales 16x for stride 2 the
+correction to sigma1 is <=~5%: assumption).
+Fit on 00-05: sigma(r)=sqrt(a^2+(kr)^2), a=0.86 cm, k=0.044 cm/m (0.88 cm @4 m, 1.76 cm @35 m).
+Held-out (<=20% per bin): NOT met. 06: -19.7/-20.4/-29.1/-6.2/+3.9%; 07: +1.7..+6.9%. Training seqs
+01/03/04 are +11..+22% above model at 30-40 m, 01 +20% at 5-10 m: noise varies ~+-20% between sequences,
+cause unknown. Fixed-sigma(r) Gaussian = average within ~+-30%.
+Beams: 64 distinct, -23.59..+2.70 deg, smallest gap 0.23 deg (earlier 67 peaks/0.10 gaps = double counts
+confirmed). Bottom predicted -24..-25: not met.
+Fill: above 0 deg 0.98 (predicted <0.6: not met), below -10 deg 0.98 (met), lowest beams (<-18 deg)
+56-87%; fill > 1 is a denominator artifact (2014 samples/rev = global median step).
+RETRACTED: 'dropouts depend on elevation' (one scan); lowest beams do have lower fill, cause unverified.
+Next: intensity vs sigma. Predictions: at 5-10 m sigma(lowest populated intensity bin) >= 1.2x
+sigma(highest); median road intensity of 06 < that of 00/02/05/07. If neither: intensity does not
+explain the +-20% between-sequence spread.
