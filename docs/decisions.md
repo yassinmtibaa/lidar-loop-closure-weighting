@@ -142,3 +142,12 @@ Established: the large corrections come from the dropped closures. Not establish
 why. Suspect 7<->3 (largest error, parallel to 8<->4). Revised plan: leave-one-out on 05 (needs a
 small slam.py patch to skip closure pairs), NOT uniform downweighting. 2 survivors also have the
 highest overlaps (0.70, 0.82): confound, 5 points. Free generalization check on 00/02 first.
+
+## 2026-10-03: generalization check failed; KISS-SLAM investigation closed
+Predictions: 00 RMS change ratio (ovl06/default) < 0.8 -> observed 0.89 (not met); 05 KITTI trans
+0.35-0.40 -> observed 0.335 (better than predicted, ~= odometry 0.342). 00: 0.573 vs 0.574;
+02: 0.580 vs 0.576 (within noise). Closure-cluster harm is specific to 05 in our data (3 looped
+tuning seqs, 5 closures on 05). Hypothesis: matters on 05 because odometry is already accurate there.
+Decision: do not adopt ovl06 as default (07: -1 closure, ATE +4.8%); drop learned closure
+selection (insufficient labeled data); stop mining KISS-SLAM; validation (06-07) and test (08-10)
+remain unused for further tuning. Next direction: simulation / sensor noise model.
