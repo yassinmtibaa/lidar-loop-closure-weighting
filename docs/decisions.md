@@ -277,3 +277,12 @@ Ring gives beam id directly. Not yet known: intensity values, point_step, non-re
 Predictions for inspect_cloud.py: 10,240 points; intensity 1-3 distinct values (laser_retro default);
 ring 0-15 = row index; misses are non-finite coordinates in the organized cloud.
 If intensity is constant, intensity effects need laser_retro assigned per surface in our own world.
+
+## 2026-10-03: Gazebo cloud inspection (example world)
+Predictions: 10,240 points (met); intensity 1-3 distinct values (met: 1 value, 0.000 everywhere, no
+information); ring 0-15 = row index (met); misses = non-finite coordinates (met: 2784/10240 = 27%, NaN vs
+inf not checked). point_step 32; frame_id via ROS bridge 'model_with_lidar/link/gpu_lidar'. World file has
+no laser_retro and no <noise>. Intensity-dependent terms (bright offset, dim-noise factor) need surfaces
+with laser_retro. Prediction: laser_retro=R on a visual -> hit points report intensity R (or a fixed
+multiple); stays 0 -> not wired as recalled (placement or scale unknown). Stray parameter_bridge children
+survive `kill` of the ros2 run wrapper.
