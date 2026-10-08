@@ -358,3 +358,16 @@ ring_stats.triples copy); S2 injected noise lag-1/lag-2 autocorrelation within +
 sigma of the injected noise alone within 3% of the model (0.919 cm at 5-10 m, 1.393 cm at 20-30 m). S1 failure for the
 ring_stats copy = KITTI numbers carry the same factor. S1-S3 all met = excess comes from ideal-cloud interaction or
 checker masks.
+
+## 2026-10-03: estimator diagnosis (live, narrow120, 8 pairs)
+S2 met: injected noise white (lag1 +0.005/+0.006, lag2 +0.001/-0.005). S3 met: second difference of injected noise alone
+0.920 / 1.400 cm vs model 0.919 / 1.393 (+0.1% / +0.5%). S1 (synthetic) pending. Ideal cloud: MAD/sqrt6 0.092 / 0.008 cm but
+std/sqrt6 1.9 / 12.6 cm, |d2| percentiles 50/99/99.9 = 0.15/16.6/21.3 cm (5-10 m), 0.04/142/168 cm (20-30 m).
+d2(noisy) = d2(ideal) + d2(noise), so the 1.3-1.4x inflation comes from the ideal cloud (quadrature excess 0.93 / 1.28 cm).
+Corrections: P2 passed only in the MAD sense (tails hidden); P4 mis-specified (assumed smooth ideal cloud); sqrt(6) formula
+withdrawn as suspect. Caveat kept: estimator reads any non-white structure as noise, so KITTI 0.9 cm near-range = upper bound
+on white noise. Hypothesis: elevation error of ~0.12-0.15 deg (dr/dtheta = r*cot(theta)) on a minority of rays/columns.
+Predictions for sim_noise_check3.py: B1 >= 50% of triples with |ideal d2| > 2 cm sit in <= 10 of the 671 columns;
+B2 (if B1 fails) robust per-ring elevation spread on rings hitting 20-30 m >= 0.005 deg with predicted range jitter >= 1 cm;
+C on ideal-smooth triples (|ideal d2| < 1 cm): noisy/model within 0.90-1.10 in every bin with >= 500 triples; unrestricted ratio
+reproduces ~1.3-1.4. Both B1 and B2 failing = unexplained, to be reported as such.
