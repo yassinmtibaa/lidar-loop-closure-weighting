@@ -321,3 +321,16 @@ Predictions for the A/B (flat vs nocube vs narrow120): P1 nocube non-ground coun
 P2 narrow120: non-ground share on rings 30-53 inside its sector < 20% (360 deg multi-camera artifact);
 >50% means world or sensor geometry. P3 gz-transport rate of the full sensor ~4 Hz (sensor-limited), narrow120 >= 8 Hz;
 full >= 8 Hz would mean my bridge/subscriber was the bottleneck.
+
+## 2026-10-03: sim A/B (flat vs nocube vs narrow120), results
+P1 (nocube within 10% of flat): met, identical (ground 52,570 / non-ground 62,514 / non-finite 13,812).
+P2 (narrow120 < 20% non-ground on rings 30-53 in sector): met (ring 40/50 all ground; sector ground 74% of
+points vs 41% for 360 deg). P3 (rates): not evaluated; gz topic -f printed nothing.
+Finding: near-field non-ground returns (1.0-1.6 m, intensity 0) occur in the 360 deg sensor over most azimuths
+(rings 30-63) and not in the 120 deg sector. Cause not verified (suspected: seam/stitching of the multi-camera
+360 deg render). Cube not the cause. pmon shows velodyne_flat.s as a G (graphics) process: GPU context
+exists; utilization '-' = no samples. 'Software rendering' suspicion dropped (no evidence); 4.2 Hz unexplained.
+Decision: noise-model work uses the 120 deg x 671-sample sensor (az step 0.1788 deg); 360 deg later via three
+120 deg sensors merged in the node.
+Predictions for ideal-sensor ring check: sigma < 0.1 cm at 5-40 m; after injecting the fitted noise: measured
+within 10% of injected per bin; az step 0.179 deg.
