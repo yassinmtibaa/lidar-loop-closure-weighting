@@ -346,3 +346,15 @@ Predictions (scripts/sim_noise_check.py, 8 cloud pairs, ground, asphalt-intensit
 of rms sigma per bin, |mean| < 0.1 sigma; (4) second-difference estimator on the noisy cloud within 10% of
 sigma_model at the bin's median range per bin 5-40 m (a deviation: check (3) decides estimator vs node).
 The wiring check tests the implementation, not realism: the same estimator re-measures injected noise.
+
+## 2026-10-03: noise node wiring check (narrow120, 8 pairs)
+P1 rate >= 8 Hz: met (10.01 Hz both). P2 ideal sigma < 0.1 cm: met (0.048/0.090/0.006/0.007/0.010 cm;
+5-10 m bin unexplained). P3 direct std within 3% of model, mean < 0.1 sigma: met (0.995-1.011; |mean| <= 0.14 mm).
+P4 estimator on noisy cloud within 10% of sigma_model: NOT met, 1.31/1.42/1.30/1.25/1.27. Node injects correct noise;
+the second-difference estimator reads ~30% high on it. Implication: KITTI sigma values (same estimator) may be
+overstated; unresolved until diagnosis. Warnings (inf-inf) and node Exit 1 (pkill) harmless.
+Diagnosis predictions: S1 estimator formula on synthetic white noise returns sigma within 2% (checker style AND
+ring_stats.triples copy); S2 injected noise lag-1/lag-2 autocorrelation within +-0.02 of 0; S3 second-difference
+sigma of the injected noise alone within 3% of the model (0.919 cm at 5-10 m, 1.393 cm at 20-30 m). S1 failure for the
+ring_stats copy = KITTI numbers carry the same factor. S1-S3 all met = excess comes from ideal-cloud interaction or
+checker masks.
