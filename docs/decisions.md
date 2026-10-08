@@ -286,3 +286,14 @@ no laser_retro and no <noise>. Intensity-dependent terms (bright offset, dim-noi
 with laser_retro. Prediction: laser_retro=R on a visual -> hit points report intensity R (or a fixed
 multiple); stays 0 -> not wired as recalled (placement or scale unknown). Stray parameter_bridge children
 survive `kill` of the ros2 run wrapper.
+
+## 2026-10-03: Gazebo test world worlds/velodyne_flat.sdf (predictions fixed before the run)
+Derived from the gpu_lidar example (asserted edits): 64 x 2014 samples, 360 deg horizontal,
+vertical -23.59..+2.70 deg (uniform spacing, approximation of KITTI's non-uniform), range 0.08-80 m,
+range resolution 0.0001 m, sensor 1.73 m above ground (z=0 top), ground 200 x 200 m split in three
+coplanar boxes, bright band y in [2,5] with laser_retro 0.9 (ground 0.3), red box removed.
+Predictions: (1) cloud 64 x 2014 = 128,896 points; (2) wall rate >= 8 Hz of the 10 Hz setting
+(below 5 Hz: reduce the sensor); (3) 53-55 rings have finite points (downward beams below ~-1.24 deg
+hit ground inside 80 m); first finite ring is ring 0 or ring 63 (direction unknown), spacing ~0.417 deg;
+(4) median z of down-beam points -1.73 +- 0.03 m; (5) intensity: two distinct values near 0.3 and 0.9
+(or a fixed multiple); only 0.000 means laser_retro is not wired as recalled.
