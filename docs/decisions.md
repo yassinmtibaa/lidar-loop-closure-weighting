@@ -297,3 +297,13 @@ Predictions: (1) cloud 64 x 2014 = 128,896 points; (2) wall rate >= 8 Hz of the 
 hit ground inside 80 m); first finite ring is ring 0 or ring 63 (direction unknown), spacing ~0.417 deg;
 (4) median z of down-beam points -1.73 +- 0.03 m; (5) intensity: two distinct values near 0.3 and 0.9
 (or a fixed multiple); only 0.000 means laser_retro is not wired as recalled.
+
+## 2026-10-03: velodyne_flat.sdf first run
+(1) 64x2014 cloud: met. (2) rate >= 8 Hz: NOT met, 4.23 Hz (sim 4.22, RTF 1.00; sensor, bridge or my
+subscriber unresolved; 4.1 MB/message). (3) 53-55 rings finite: NOT met, 64/64; ring 63 (+2.70 deg) 54% finite,
+ring 0 88% finite; finite 115,084 vs ~108,800 predicted from ground geometry. (4) ground z -1.73+-0.03: -1.770
+(narrow miss, link offset inside the lidar model unseen). (5) intensity: 0.305 and 0.885 present (laser_retro
+works) but 62,524 finite points (54%) at 0.000; nonzero-intensity ground hits 52,560 = ~48% of ~108,800.
+Diagnostic predictions: (1) gz-transport rate without the bridge >= 8 Hz (else sensor/GPU limit);
+(2) >= 30% of ground-height points have intensity 0 (<5%: zeros are non-ground);
+(3) finite points above 0 deg: median range < 3 m (own body), not ~80 m.
