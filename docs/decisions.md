@@ -334,3 +334,15 @@ Decision: noise-model work uses the 120 deg x 671-sample sensor (az step 0.1788 
 120 deg sensors merged in the node.
 Predictions for ideal-sensor ring check: sigma < 0.1 cm at 5-40 m; after injecting the fitted noise: measured
 within 10% of injected per bin; az step 0.179 deg.
+
+## 2026-10-03: narrow120 sensor rate and noise-node wiring check (predictions fixed before the run)
+Rate: narrow120 publishes /lidar/points and /lidar at ~10 Hz in gz-transport (intervals 0.099-0.102 s);
+full 360 deg sensor not measured this way (4.2 Hz was bridge + python subscriber, unexplained).
+Node scripts/noise_node.py: Gaussian noise along each ray, sigma(r)=scale*sqrt(a^2+(k r)^2), a=0.86 cm,
+k=0.044 cm/m (all-triples fit, ~10% high near range). Not implemented: dim factor, bright offset, dropouts.
+Predictions (scripts/sim_noise_check.py, 8 cloud pairs, ground, asphalt-intensity homogeneous triples):
+(1) wall rate >= 8 Hz on both topics via the bridge; (2) ideal-cloud sigma < 0.1 cm in every bin 5-40 m
+(a larger value = simulator depth artifacts: floor to subtract); (3) direct check: std(noisy-ideal) within 3%
+of rms sigma per bin, |mean| < 0.1 sigma; (4) second-difference estimator on the noisy cloud within 10% of
+sigma_model at the bin's median range per bin 5-40 m (a deviation: check (3) decides estimator vs node).
+The wiring check tests the implementation, not realism: the same estimator re-measures injected noise.
