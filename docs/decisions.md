@@ -371,3 +371,14 @@ Predictions for sim_noise_check3.py: B1 >= 50% of triples with |ideal d2| > 2 cm
 B2 (if B1 fails) robust per-ring elevation spread on rings hitting 20-30 m >= 0.005 deg with predicted range jitter >= 1 cm;
 C on ideal-smooth triples (|ideal d2| < 1 cm): noisy/model within 0.90-1.10 in every bin with >= 500 triples; unrestricted ratio
 reproduces ~1.3-1.4. Both B1 and B2 failing = unexplained, to be reported as such.
+
+## 2026-10-08: check3 results (narrow120, 8 pairs)
+C met: noisy/model on ideal-smooth triples 1.014/1.018/0.986/0.979 (57-63% kept); unrestricted 1.36-1.43 reproduced.
+Node verified (direct check + S3 + C). B1 not met: top 10/30/100 of 671 columns hold 5/15/43% of outlier triples
+(uniform 1.5/4.5/15%). B2 not a valid test: elevation spread used MAD (tail-blind, as P2 before); outlier triples 31%
+(~10% of points). Ideal-cloud d2 std/sqrt6 grows 0.67 cm (4.4 m) -> 29 cm (44 m), MAD ~0.
+Hypothesis: depth-buffer quantization (rendered depth, precision ~ r^2 / near clip; from memory, unverified).
+Predictions (sim_quant_check.py, ideal cloud only): Q1 >= 70% of outlier triples (|d2| > 0.5 cm) have an adjacent
+triple with opposite-sign d2 of equal size within 20% (jump signature); Q2 per-ring median outlier |d2| grows with
+range, ring ~48 (28.7 m) / ring ~30 (9.3 m) between 4 and 15; Q3 with <min> 1.0 m instead of 0.08 m, std/sqrt6 at
+ring ~48 drops >= 5x. Q1 and Q3 both failing = unexplained; stop investigating sim depth and report it.
