@@ -307,3 +307,17 @@ works) but 62,524 finite points (54%) at 0.000; nonzero-intensity ground hits 52
 Diagnostic predictions: (1) gz-transport rate without the bridge >= 8 Hz (else sensor/GPU limit);
 (2) >= 30% of ground-height points have intensity 0 (<5%: zeros are non-ground);
 (3) finite points above 0 deg: median range < 3 m (own body), not ~80 m.
+
+## 2026-10-03: velodyne_flat diagnostic (cloud has near-field returns)
+Results: ground-height points 52,550 (predicted ~108,800 from beam geometry); their intensity is correct
+(0.305: 41,634, 0.885: 10,810, zero: 106), so laser_retro works; non-ground finite points 62,534, 99.8% intensity 0,
+median range 1.5-1.6 m (rings 30-53), ~1.0 m (rings 54-63), range 0.08-74 m. Non-ground share by ring: 28/27/39%
+(rings 0/10/20), ~64% (rings 30-53), 100% of finite on rings 54-63 (54-59% finite). Azimuth-dependent (ring 20:
+non-ground ~all of -150..-60, half of +30..+150). Own cube (0.1 m, centred on sensor) too small to explain 1 m ranges.
+Retractions: 'half the ground hits miss intensity'; the nvidia-smi compute-apps GPU test (invalid: graphics contexts
+are not listed); ground z prediction (sensor is at 1.78 m: model 1.73 + link 0.05). gz topic -hz is not a flag
+(use -f -t -m). Rate still unmeasured.
+Predictions for the A/B (flat vs nocube vs narrow120): P1 nocube non-ground count within 10% of flat (cube too small);
+P2 narrow120: non-ground share on rings 30-53 inside its sector < 20% (360 deg multi-camera artifact);
+>50% means world or sensor geometry. P3 gz-transport rate of the full sensor ~4 Hz (sensor-limited), narrow120 >= 8 Hz;
+full >= 8 Hz would mean my bridge/subscriber was the bottleneck.
