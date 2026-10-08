@@ -382,3 +382,14 @@ Predictions (sim_quant_check.py, ideal cloud only): Q1 >= 70% of outlier triples
 triple with opposite-sign d2 of equal size within 20% (jump signature); Q2 per-ring median outlier |d2| grows with
 range, ring ~48 (28.7 m) / ring ~30 (9.3 m) between 4 and 15; Q3 with <min> 1.0 m instead of 0.08 m, std/sqrt6 at
 ring ~48 drops >= 5x. Q1 and Q3 both failing = unexplained; stop investigating sim depth and report it.
+
+## 2026-10-08: quantization check results; direction C closed
+S1 met: synthetic white noise, checker 1.007/1.009/1.010, ring_stats.triples 1.005/0.999/1.006 -> KITTI estimator correct.
+Q1 met: 88.1% of outlier triples (|d2| > 0.5 cm) paired with an adjacent opposite-sign equal-size triple (jump signature);
+~38-48% of ground triples contain a jump. Q2 not met: ring48/ring30 median outlier 3.13 (predicted 4-15).
+Q3 not met: <min> 1.0 vs 0.08 identical to 3 decimals. Verdict per pre-set rule: jumps confirmed, origin unknown.
+Post-hoc (not pre-registered): rings 27-51 jump = 0.187-0.190% of range (proportional to r, not r^2; suggests
+storage precision, unverified); rings 0-24 follow a different law, discontinuity between rings 24 and 27 unexplained.
+Consequence: sim ideal-ground d2-sigma 2.6 cm @9 m, 15 cm @29 m, 29 cm @44 m vs real white noise ~0.9 cm near,
+~1.6-1.8 cm at 30-40 m. Beyond ~8 m the gpu_lidar artifact exceeds real sensor noise (~10x at 30 m).
+Noise node verified but not useful on top of this sensor beyond ~8 m. Investigation of sim depth stopped.
