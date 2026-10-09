@@ -405,3 +405,16 @@ P1 exactly one of rotA/rotB changes 05 KITTI trans by > 5%; that one marks the r
 P2 rotation-upweighted variant: 05 KITTI trans <= 0.42% while 00 and 02 ATE stay within 20% of default.
 P3 cw01: 05 KITTI trans stays >= 0.47% (uniform closure downweighting does not fix 05).
 If P1 fails (neither changes 05): weights do not reach the optimizer or do not matter -> stop this line.
+
+## 2026-10-09: factor-weighting round 1 (00/02/05)
+P0 met (05 0.517%/0.661 unchanged). P1 NOT met as stated: rotA 05 0.341% (-34%), rotB 0.725% (+40%); prediction
+mis-formed (only the block ratio matters; rotB = rotation 1e4 cheaper). Direction identifies last 3 entries as rotation.
+P2 met: rotA 05 KITTI trans 0.341% (odom 0.342), ATE 0.661 -> 0.363 m, all 5 closures kept; 00 ATE 0.887, 02 1.911.
+rotA cost: 00 KITTI trans 0.573/0.575 -> 0.596% (+4%, beyond 00's ~0.002 spread). P3 NOT met: cw01 05 0.392%,
+but 02 ATE 2.245 (+17%, beyond noise).
+Selection rule (fixed now, tuning seqs 00-05 only): pick W in {1e3, 1e4, 1e5} for diag(1,1,1,W,W,W) on all factors
+maximizing mean KITTI trans improvement vs slam_default over 00-05, subject to: no seq ATE worse by > 20%,
+no seq KITTI trans worse by > 5% (02: judged against its 1- and 2-closure states). Prediction: 05 improves
+monotonically 1e3 -> 1e4; 1e5 within +-10% of 1e4 on 05; loop-free 01/03/04 within +-2% of default for every W.
+Then: one validation run on 06/07 (pass: KITTI trans not worse by > 3%, ATE not worse by > 20%, vs slam_default),
+then one final run of default vs chosen on test seqs 08-10, reported as-is.
