@@ -428,3 +428,13 @@ not explored (would be post-hoc); future work.
 Test predictions (fixed now; test 08-10 reported as-is; default rerun on 08-10 gives its noise):
 T1 08 (default had 5 closures, ATE +11% vs odometry): W=1e3 KITTI trans not worse than default by > 3%.
 T2 09, 10: W=1e3 within +-2% of default on KITTI trans and ATE (default found 0 closures there).
+
+## 2026-10-09: validation and final test, W=1e3 (experiment closed)
+Validation passed: 06 KITTI trans 0.325 -> 0.332% (+2.2%), ATE +0.9%; 07 +1.3%, ATE -0.3%.
+06 local loss under default SLAM (odom 0.281 -> 0.325) is NOT recovered by the fix.
+Test (run once, reported as-is): default and rerun identical on 08-10 (deterministic). T1 met: 08 KITTI trans
+0.954 -> 0.841% (-11.8%), ATE 2.524 -> 2.126 m (-15.8%); default ATE was worse than odometry (2.266), W=1e3 better.
+T2 met: 09/10 identical (0 closures).
+Claim: rotation-weighted information matrices (diag(1,1,1,1e3,1e3,1e3)) remove most of the local-accuracy cost of
+loop closure on 05 and 08 and improve ATE. Limits: KITTI only, one system, W from 3 candidates (saturated at 1e3),
+large effect on 2 sequences, no effect on 06's loss, +1.9% on 00.

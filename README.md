@@ -8,6 +8,8 @@ simulation more realistic.
 - See docs/environment.md for hardware and versions.
 - ROS 2 Jazzy on Ubuntu 24.04, workspace ~/ros2_ws.
 - KISS-ICP and evo installed with pipx.
+- KISS-SLAM slam.py patched for env-controlled information matrices (docs/kiss_slam_weights_patch.diff);
+  unset env vars = original behaviour. Main result: KS_ODOM_INFO=KS_CLOSURE_INFO=1,1,1,1e3,1e3,1e3
 - KISS-ICP needs a one-line patch (TUM export crash on newer NumPy):
   see docs/pipeline_patch.diff. Reapply after any pipx upgrade/reinstall.
 
