@@ -1,9 +1,7 @@
 % Technical report: place in ~/lidar_loop/docs/report/report.tex and compile with
 %   pdflatex report.tex && pdflatex report.tex
 % Figures are read from ../figures/ (docs/figures/traj_seq05.pdf, traj_seq08.pdf).
-% TODO before sharing: fill the KISS-SLAM version (pipx list | grep kiss-slam),
-%                      check every bibliography entry against the original paper,
-%                      add the GitHub URL of the repository.
+% TODO before sharing: check every bibliography entry against the original paper.
 \documentclass[11pt,a4paper]{article}
 \usepackage[margin=2.3cm]{geometry}
 \usepackage{amsmath,amssymb}
@@ -64,7 +62,7 @@ density-map loop closures and pose-graph optimization. The contributions are:
 
 \section{Setup and methodology}
 \paragraph{Data and software.} KITTI odometry~\cite{kitti} sequences 00--10 (Velodyne HDL-64E, ground truth
-available). KISS-ICP~1.3.0 and KISS-SLAM (version TODO) installed via \texttt{pipx}; evaluation with
+available). KISS-ICP~1.3.0 and KISS-SLAM~0.0.2 installed via \texttt{pipx}; evaluation with
 \texttt{evo}~1.37.1~\cite{evo}; Ubuntu~24.04, RTX~4060 laptop GPU, 32\,GB RAM. KISS-SLAM's pose graph is
 solved with a g2o-based optimizer~\cite{g2o}.
 
