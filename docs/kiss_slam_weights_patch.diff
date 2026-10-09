@@ -1,0 +1,48 @@
+--- /home/yassine/.local/share/pipx/venvs/kiss-slam/lib/python3.12/site-packages/kiss_slam/slam.py.orig	2026-10-09 10:04:09.496740490 +0100
++++ /home/yassine/.local/share/pipx/venvs/kiss-slam/lib/python3.12/site-packages/kiss_slam/slam.py	2026-10-09 10:04:09.511743728 +0100
+@@ -31,6 +31,18 @@
+ from kiss_slam.voxel_map import VoxelMap
+ 
+ 
++import os
++
++
++def _info(name):
++    v = os.environ.get(name)
++    if not v:
++        return np.eye(6)
++    d = [float(x) for x in v.split(',')]
++    assert len(d) == 6, name
++    return np.diag(d)
++
++
+ def transform_points(pcd, T):
+     R = T[:3, :3]
+     t = T[:3, -1]
+@@ -74,7 +86,7 @@
+         )
+         if is_good:
+             self.closures.append((source_id, target_id))
+-            self.optimizer.add_factor(source_id, target_id, pose_constraint, np.eye(6))
++            self.optimizer.add_factor(source_id, target_id, pose_constraint, _info('KS_CLOSURE_INFO'))
+             self.optimize_pose_graph()
+ 
+     def optimize_pose_graph(self):
+@@ -102,7 +114,7 @@
+         self.voxel_grid.add_points(transformed_local_map)
+         self.optimizer.add_variable(self.local_map_graph.last_id, self.local_map_graph.last_keypose)
+         self.optimizer.add_factor(
+-            self.local_map_graph.last_id, query_id, relative_motion, np.eye(6)
++            self.local_map_graph.last_id, query_id, relative_motion, _info('KS_ODOM_INFO')
+         )
+         self.compute_closures(query_id, query_points)
+ 
+@@ -126,7 +138,7 @@
+             ]
+             for i, factor in enumerate(odometry_factors):
+                 pgo.add_variable(id_ + 1, node.keypose @ node.local_trajectory[i + 1])
+-                pgo.add_factor(id_ + 1, id_, factor, np.eye(6))
++                pgo.add_factor(id_ + 1, id_, factor, _info('KS_ODOM_INFO'))
+                 id_ += 1
+             pgo.fix_variable(id_ - 1)
+ 
