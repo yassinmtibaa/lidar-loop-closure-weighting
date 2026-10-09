@@ -393,3 +393,15 @@ storage precision, unverified); rings 0-24 follow a different law, discontinuity
 Consequence: sim ideal-ground d2-sigma 2.6 cm @9 m, 15 cm @29 m, 29 cm @44 m vs real white noise ~0.9 cm near,
 ~1.6-1.8 cm at 30-40 m. Beyond ~8 m the gpu_lidar artifact exceeds real sensor noise (~10x at 30 m).
 Noise node verified but not useful on top of this sensor beyond ~8 m. Investigation of sim depth stopped.
+
+## 2026-10-09: factor-weighting experiment (time-box: ~2 weeks, then write-up)
+KISS-SLAM uses np.eye(6) for all factors (odometry, closure, fine-grained). Physical ratio of rotation to
+translation weight ~ (0.5 m / 0.0017 rad)^2 ~ 1e5. Patch slam.py: KS_ODOM_INFO / KS_CLOSURE_INFO env vars give
+6 diagonal values; unset = np.eye(6). Variants on 00/02/05: rotA diag(1,1,1,1e4,1e4,1e4) all factors;
+rotB diag(1e4,1e4,1e4,1,1,1) all factors (ordering check); cw01 closures diag(0.1 x6), odometry identity.
+Baseline slam_default: 05 KITTI trans 0.517% (odom 0.342), ATE 0.661; 00 ATE ~0.91, 02 ~1.85-1.92 (noisy).
+Predictions: P0 patched run with no env vars = slam_default on 05 to 6 digits (patch inert).
+P1 exactly one of rotA/rotB changes 05 KITTI trans by > 5%; that one marks the rotation block.
+P2 rotation-upweighted variant: 05 KITTI trans <= 0.42% while 00 and 02 ATE stay within 20% of default.
+P3 cw01: 05 KITTI trans stays >= 0.47% (uniform closure downweighting does not fix 05).
+If P1 fails (neither changes 05): weights do not reach the optimizer or do not matter -> stop this line.
