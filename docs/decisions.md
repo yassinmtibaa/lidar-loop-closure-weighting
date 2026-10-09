@@ -418,3 +418,13 @@ no seq KITTI trans worse by > 5% (02: judged against its 1- and 2-closure states
 monotonically 1e3 -> 1e4; 1e5 within +-10% of 1e4 on 05; loop-free 01/03/04 within +-2% of default for every W.
 Then: one validation run on 06/07 (pass: KITTI trans not worse by > 3%, ATE not worse by > 20%, vs slam_default),
 then one final run of default vs chosen on test seqs 08-10, reported as-is.
+
+## 2026-10-09: weight selection (round 2, tuning seqs 00-05)
+Mean KITTI trans change vs default: 1e3 -5.5%, 1e4 -4.7%, 1e5 -4.7%; all pass constraints. Chosen W = 1e3 (also
+smallest cost on 00: +1.9% vs +4.2/+4.7%). Predictions: monotone 1e3->1e4 on 05 NOT met (saturated at 1e3:
+0.333 vs 0.341); 1e5 within 10% of 1e4 met; loop-free 01/03/04 within 2% met (03/04 identical).
+05 at 1e3: KITTI trans 0.333% (odometry 0.342%), ATE 0.364 m (default 0.661). Optimum may lie below 1e3:
+not explored (would be post-hoc); future work.
+Test predictions (fixed now; test 08-10 reported as-is; default rerun on 08-10 gives its noise):
+T1 08 (default had 5 closures, ATE +11% vs odometry): W=1e3 KITTI trans not worse than default by > 3%.
+T2 09, 10: W=1e3 within +-2% of default on KITTI trans and ATE (default found 0 closures there).
