@@ -1,0 +1,11 @@
+─────────────────────────── Results for NCLTDataset Sequence 2013-01-10 ────────────────────────────
++---------------------------------+-------+-------+
+|                          Metric | Value | Units |
++=================================+=======+=======+
+|       Average Translation Error | 1.874 | %     |
+|        Average Rotational Error | 0.013 | deg/m |
+| Absolute Trajectory Error (ATE) | 1.926 | m     |
+| Absolute Rotational Error (ARE) | 0.052 | rad   |
+|               Average Frequency |  38   | Hz    |
+|                 Average Runtime |  27   | ms    |
++---------------------------------+-------+-------+
