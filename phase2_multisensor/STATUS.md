@@ -1,20 +1,31 @@
 # Status (update at the end of every session)
 
-**Last update:** 2026-10-10
-**Current phase:** 2.0 Setup
-**Done:** project structure, dataset survey and choice (NCLT primary).
+**Last update:** 2026-10-14
+**Current phase:** 2.1 (replicate Phase 1 on NCLT, LiDAR only)
+**Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
+written, tune + validation sessions unpacked.
 
 ## Next action
-1. Disk: over 400 GB free (confirmed 2026-10-10). Budget: ~150 GB for ~8 NCLT sessions without camera.
-2. Download ONE short NCLT session for a smoke test: 2013-01-10 (Velodyne ~3 GB, sensors 21 MB,
-   ground truth 20 MB). Skip images.
-3. Run KISS-ICP on it with `--dataloader nclt`, convert ground truth, evaluate with evo (P2.0a, P2.0b).
+1. `pipx inject kiss-slam scipy` (the NCLT loader needs it in the KISS-SLAM env too).
+2. DONE: KISS-ICP baseline (ATE 0.13 / 0.15 / 0.57% of path), see DECISIONS.
+3. DONE: KISS-SLAM default x3. P2.1a met, P2.1b mostly, P2.1c not met; SLAM noise large (see DECISIONS).
+4. DONE: W=1e3 x3 on tune: better on 2012-04-29, within noise elsewhere (prediction met).
+5. DONE: validation passed (05-26 ATE better, else within noise; W tighter).
+6. NEXT: test sessions 2012-02-12, 2012-06-15, 2013-04-05: default x3 and W=1e3 x3 (P2.1d).
+All 9 sessions are on disk. Test sessions (2012-02-12, 2012-06-15, 2013-04-05): don't run yet.
+
+## Facts to remember
+- Disk: 404 GB free (2026-10-11). velodyne_hits.bin deleted after unpacking (see DECISIONS).
+- KISS-ICP nclt loader: data/nclt/<date>/velodyne_sync/<timestamp>.bin and
+  data/nclt/ground_truth/groundtruth_<date>.csv; needs scipy (kiss-icp env: installed).
+- Sensor files per session: ms25.csv (IMU), kvh.csv (fiber-optic gyro), wheels.csv, odometry_mu/cov.csv
+  (wheel odometry + covariance), gps.csv, gps_rtk.csv (excluded: feeds ground truth).
+- Use *_kitti.txt with evo; KISS-ICP's TUM timestamps on NCLT are frame indices.
+- ~37 frames/s KISS-ICP on NCLT: 2012-01-15 (33.6k scans) ~15 min.
+- KISS-SLAM in this machine is the patched one: KS_ODOM_INFO / KS_CLOSURE_INFO env vars, unset = original.
 
 ## Open questions
-- Exact session split (decide in 2.0 after the smoke test).
-- KISS-ICP nclt loader layout (checked in its source): data/nclt/<date>/velodyne_sync/<timestamp>.bin and
-  data/nclt/ground_truth/groundtruth_<date>.csv; it needs scipy in the kiss-icp env.
-- Bako Motors role and the 92% figure for the CV (separate, applications).
+- Bako Motors role and the 92% figure for the CV (applications, separate).
 
 ## For whoever picks this up (Yassine or Claude)
 Read README.md, then this file, then the last entries of DECISIONS.md. Phase 1 lives in the repo root.
