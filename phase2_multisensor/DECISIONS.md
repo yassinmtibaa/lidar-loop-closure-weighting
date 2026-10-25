@@ -117,3 +117,39 @@
 - Test sessions 2012-02-12, 2012-06-15, 2013-04-05: default x3 and W=1e3 x3, run once, reported as-is.
 - P2.1d (registered 2026-10-10): W=1e3 lowers the KITTI metric vs default on the test sessions on average, without
   raising ATE by more than 10% on any. Evaluated on 3-run means; per-session non-overlap verdicts reported too.
+
+## 2026-10-18: OS upgrade and reproducibility recheck (BEFORE any test run)
+- System upgraded to Ubuntu 26.04.1 (system Python 3.14.4, ROS 2 Lyrical). All pipx tools broke (venvs built on 3.12).
+- Reinstalled on uv-managed Python 3.12 with the SAME pinned versions: kiss-icp 1.3.0, kiss-slam 0.0.2, evo 1.37.1.
+  Patched pipeline.py / slam.py restored from docs/patched_backup/ (copied before reinstall). NumPy now 2.5.4
+  (kiss-icp, evo) and 2.2.6 (kiss-slam); previous NumPy versions were not recorded (lesson: record them).
+- Check: scripts/check_env.sh. Weighting verified in the output pose graph (rotation info = 1000 in W run, 1 in default).
+- Recheck on 2012-05-26, 1 run each, scored with metrics.py (old runs re-scored with the same script: values match the
+  table above; old runs dropped 1 NaN GT frame, new runs 0 since the CSV fix):
+  | run | ATE m | KITTI % | closures | old 3-run range (ATE / KITTI) | inside? |
+  |---|---|---|---|---|---|
+  | default | 2.450 | 1.357 | 10 | 2.39-3.49 / 1.333-1.409 | yes / yes |
+  | W=1e3 | 2.571 | 1.356 | 11 | 1.44-2.25 / 1.293-1.352 | NO / NO (just above) |
+- Reading: one run cannot separate "software change shifted W" from "3 runs underestimated run-to-run noise".
+  Either way, the 05-26 verdict "ATE BETTER (no overlap)" no longer holds on the 4 W runs pooled (1.44-2.57 overlaps
+  default 2.39-3.49). Treat 05-26 ATE as "within noise" until resolved. Validation rule (W not worse) still passes.
+- Plan, fixed now: 2 more runs of each on 05-26 (3 new per condition). Environment accepted as equivalent if, for both
+  conditions, the new 3-run range overlaps the old 3-run range on ATE and KITTI. If accepted: report 05-26 with all
+  6 runs per condition and proceed to the test sessions on this environment. If not: stop, investigate the NumPy /
+  dependency difference (try matching old versions) before any test run. No test run until this is settled.
+
+## 2026-10-18 (later): recheck result -> environment ACCEPTED
+- 2 more runs per condition on 2012-05-26 (4 run in parallel; weighting verified in each pose graph).
+  | condition | new 3 runs ATE m | new KITTI % | old 3 runs ATE / KITTI | overlap? |
+  |---|---|---|---|---|
+  | default | 2.450, 3.756, 3.469 | 1.357, 1.422, 1.376 | 2.39-3.49 / 1.333-1.409 | yes / yes |
+  | W=1e3 | 2.571, 1.769, 2.586 | 1.356, 1.331, 1.383 | 1.44-2.25 / 1.293-1.352 | yes / yes |
+- Rule (fixed before these runs): overlap on both metrics for both conditions -> ACCEPTED. Test sessions run on the
+  new environment.
+- 2012-05-26 now reported on all 6 runs per condition:
+  default ATE 2.39-3.76 (mean 3.17), KITTI 1.333-1.422 (mean 1.377);
+  W=1e3  ATE 1.44-2.59 (mean 2.13), KITTI 1.293-1.383 (mean 1.343).
+  Verdict changes from "ATE BETTER (no overlap)" to "within noise by the non-overlap rule; W mean ATE 33% lower,
+  W lower on KITTI mean". Earlier claim retracted. Lesson: 3 runs underestimated KISS-SLAM's run-to-run spread on NCLT.
+- Consequence for the test protocol: keep 3 runs per condition as registered (P2.1d is on means), but report the
+  6-run 05-26 spread alongside as the noise reference.
