@@ -1,7 +1,7 @@
 # Status (update at the end of every session)
 
 **Last update:** 2026-10-25
-**Current phase:** 2.2 (fusion backbone): GTSAM backbone validated, sensor readers done; 2.1 write-up pending
+**Current phase:** 2.2 done (backbone validated, readers, L+I end to end); next 2.3; 2.1 write-up pending
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
 
@@ -20,9 +20,10 @@ written, tune + validation sessions unpacked.
      conversion (first attempt failed; see DECISIONS). P2.2c (odometry chain vs KISS-ICP) NOT MET on 2012-08-04.
    - NCLT readers (fusion/nclt.py) for wheels, FOG, IMU, standard GPS; factor helpers (fusion/sensors.py);
      12 tests pass (tests/). Wheels+FOG dead reckoning 1.08% of path (P2.2d met), wheels-only 9.2x worse (P2.2e met).
-9. NEXT for 2.2/2.3: L+I end to end (IMU preintegration between LiDAR frames in the joint graph, needs the
-   LiDAR-IMU extrinsic and the KISS frame flip diag(1,-1,-1)); then W/F/G factors in the joint graph; GPS needs a
-   map-to-NED alignment variable. Full sweeps wait for the supercomputer.
+9. DONE 2026-10-25: L+I end to end on the smoke session (scripts/li_smoke.py): runs, P2.2f met; metric changes
+   mixed (ATE -15%, KITTI +5.8%) with placeholder noise, not a result. Phase 2.2 exit criteria met.
+10. NEXT (2.3): W, F, G factors in the joint per-frame graph (GPS needs a map-to-NED alignment variable); measure
+   noise per sensor; then the noise band per subset on tune sessions. Full sweeps wait for the supercomputer.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
@@ -31,6 +32,7 @@ All 9 sessions are on disk. Test sessions were run once (2026-10-25); never reru
 - g2o (KISS-SLAM) rotation information weights the half angle: divide by 4 for GTSAM (W=1e3 -> 250).
 - KISS-ICP/KISS-SLAM frame k = nclt.lidar_timestamps()[k]; KISS frame = NCLT body/velodyne with diag(1,-1,-1) flip.
 - kvh.csv heading is counterclockwise-positive; the reader negates it. Wheel track width 0.6125 m (fitted, frozen).
+- LiDAR-to-IMU rotation: sensors.fit_imu_rotation(), ~diag(1,-1,-1) plus 0.7 deg yaw (fitted on 2013-01-10).
 - Wheel speeds read ~8% long on 2013-01-10 (scale not calibrated yet).
 - Disk: 404 GB free (2026-10-11). velodyne_hits.bin deleted after unpacking (see DECISIONS).
 - KISS-ICP nclt loader: data/nclt/<date>/velodyne_sync/<timestamp>.bin and

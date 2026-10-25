@@ -1,0 +1,9 @@
+R_LI fit: median residual 0.0193 rad over 734 windows; R_LI =
+[[ 0.9999 -0.0125 -0.0034]
+ [-0.0125 -0.9999  0.001 ]
+ [-0.0034 -0.001  -1.    ]]
+L-only (GTSAM)  finite=True ATE 1.926 m  RPE100 2.539 m  KITTI 1.874 %
+L+I             finite=True ATE 1.630 m  RPE100 2.018 m  KITTI 1.983 %
+KISS-ICP        ATE 1.926 m  KITTI 1.874 %
+L-only GTSAM vs KISS-ICP max position difference 4.21e-12 m (must be < 1e-3)
+P2.2f: finite True, KITTI change +5.8% -> MET

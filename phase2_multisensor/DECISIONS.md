@@ -257,3 +257,30 @@
   a wheel scale factor is a Phase 2.3 calibration question.
 - IMU (ms25) at rest: |acc| = 9.805 m/s^2, gyro mean < 0.004 rad/s per axis (first 30 samples).
 - GPS (gps.csv): mode 2 (2940 rows) or 3 (4246 rows); num_sats is always 0 on this session (unused); one 39.6 s gap.
+
+## 2026-10-25: L+I end to end on the smoke session (fixed BEFORE the first L+I run)
+- Yassine asked to continue and push straight to master. Smoke session 2013-01-10 only (not in the split).
+- LiDAR-to-IMU rotation estimated on 2013-01-10 (in-sample): 1 s LiDAR rotations (KISS-ICP smoke run) vs gyro
+  integration (bias = mean of the first second at rest), 734 windows turning > 0.05 rad, Kabsch fit.
+  R_LI ~ diag(1, -1, -1) (the KISS flip) with a 0.7 deg yaw and 0.2 deg pitch offset; median residual 0.019 rad on
+  windows averaging 0.17 rad. Lever arm ignored (slow platform). Frozen for the L+I runs.
+- Graph: one Pose3 + velocity per LiDAR frame (5104 frames), per-frame KISS-ICP odometry as BetweenFactorPose3,
+  IMU preintegration (ImuFactor) between consecutive frames, bias with a random-walk factor between frames, gravity-
+  aligned start (roll/pitch from the accelerometer at rest), zero-velocity and bias priors at the start. Noise values
+  are placeholders (LiDAR 0.002 rad / 0.02 m per frame; IMU as in sensors.imu_params), NOT tuned on the outcome.
+- P2.2f: (1) L+I runs end to end with finite output for every frame; (2) its KITTI metric is within +-10% of L-only
+  (the KISS-ICP smoke run, 1.874%). No improvement is predicted or claimed: noise values are placeholders.
+  L-only through the same GTSAM graph (IMU factors switched off) must equal the KISS-ICP trajectory (< 1 mm).
+
+## 2026-10-25: L+I smoke result (scripts/li_smoke.py -> results/li_smoke_2013-01-10.txt) -> P2.2f MET
+| run | ATE m | RPE100 m | KITTI % |
+|---|---|---|---|
+| KISS-ICP (input) | 1.926 | | 1.874 |
+| L-only through GTSAM | 1.926 | 2.539 | 1.874 |
+| L+I | 1.630 | 2.018 | 1.983 |
+- L-only through GTSAM equals KISS-ICP to 4e-12 m. L+I runs end to end, all frames finite. KITTI +5.8% (within the
+  +-10% band); ATE -15%, RPE100 -21%. 16 s for 5104 frames, batch.
+- Reading: the exit criterion "L+I runs end to end" is met. The metric changes are NOT a result: one session,
+  one KISS-ICP input run, placeholder noise, in-sample R_LI, and they point in opposite directions (ATE and RPE
+  better, KITTI worse). GTSAM is deterministic, so the 3-run rule applies once there are 3 KISS-ICP inputs to compare.
+- preintegrate() now uses zero-order hold over [t0, t1) (the first version skipped the gap before the first sample).

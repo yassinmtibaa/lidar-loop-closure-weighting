@@ -91,22 +91,49 @@ def gps_factor(key, ned, sigma=(3.0, 3.0, 6.0)):
     return gtsam.GPSFactor(key, gtsam.Point3(*ned), gtsam.noiseModel.Diagonal.Sigmas(np.asarray(sigma, float)))
 
 
-def imu_params(acc_sigma=0.05, gyro_sigma=0.005, integration_sigma=1e-4):
-    """Preintegration parameters for a z-down navigation frame (gravity +z). Noise densities are placeholders."""
-    p = gtsam.PreintegrationParams.MakeSharedD(9.81)
+def imu_params(acc_sigma=0.05, gyro_sigma=0.005, integration_sigma=1e-4, z_up=False):
+    """Preintegration parameters; navigation frame z down (gravity +z) or z up. Noise densities are placeholders."""
+    p = gtsam.PreintegrationParams.MakeSharedU(9.81) if z_up else gtsam.PreintegrationParams.MakeSharedD(9.81)
     p.setAccelerometerCovariance(np.eye(3) * acc_sigma ** 2)
     p.setGyroscopeCovariance(np.eye(3) * gyro_sigma ** 2)
     p.setIntegrationCovariance(np.eye(3) * integration_sigma ** 2)
     return p
 
 
-def preintegrate(imu, t0, t1, params, bias=None):
-    """Preintegrated IMU measurements between t0 and t1 (us), using the samples in [t0, t1)."""
+def preintegrate(imu, t0, t1, params, bias=None, R=None):
+    """Preintegrated IMU measurements from t0 to t1 (us), zero-order hold: each piece of [t0, t1) uses the latest
+    sample at or before its start. R (3x3) rotates IMU axes into the target body frame (e.g. the LiDAR frame)."""
     pim = gtsam.PreintegratedImuMeasurements(params, bias or gtsam.imuBias.ConstantBias())
-    idx = np.flatnonzero((imu.t >= t0) & (imu.t < t1))
-    for n, k in enumerate(idx):
-        t_next = imu.t[idx[n + 1]] if n + 1 < len(idx) else t1
-        dt = (t_next - imu.t[k]) / 1e6
-        if dt > 0:
-            pim.integrateMeasurement(imu.acc[k], imu.gyro[k], dt)
+    inside = imu.t[(imu.t > t0) & (imu.t < t1)]
+    edges = np.r_[t0, inside, t1]
+    src = np.searchsorted(imu.t, edges[:-1], side="right") - 1
+    for (a, b), k in zip(zip(edges[:-1], edges[1:]), np.maximum(src, 0)):
+        acc, gyro = imu.acc[k], imu.gyro[k]
+        if R is not None:
+            acc, gyro = R @ acc, R @ gyro
+        pim.integrateMeasurement(acc, gyro, (b - a) / 1e6)
     return pim
+
+
+def fit_imu_rotation(imu, frame_t, frame_poses, window=10, min_angle=0.05):
+    """Rotation R mapping IMU axes into the frame of frame_poses (e.g. KISS-ICP LiDAR poses at frame_t):
+    Kabsch fit of LiDAR rotation vectors over `window` frames vs gyro integration (bias = mean of the first second,
+    assumed at rest). Returns R, median residual (rad), number of windows used."""
+    from scipy.spatial.transform import Rotation
+    bg = imu.gyro[imu.t < imu.t[0] + 1_000_000].mean(0)
+    A, B = [], []
+    for k in range(0, len(frame_t) - window, window // 2):
+        rl = Rotation.from_matrix(frame_poses[k][:3, :3].T @ frame_poses[k + window][:3, :3]).as_rotvec()
+        if np.linalg.norm(rl) <= min_angle:
+            continue
+        idx = np.flatnonzero((imu.t >= frame_t[k]) & (imu.t < frame_t[k + window]))
+        Ri = Rotation.identity()
+        for n, i in enumerate(idx):
+            tn = imu.t[idx[n + 1]] if n + 1 < len(idx) else frame_t[k + window]
+            Ri = Ri * Rotation.from_rotvec((imu.gyro[i] - bg) * (tn - imu.t[i]) / 1e6)
+        A.append(Ri.as_rotvec())
+        B.append(rl)
+    A, B = np.array(A), np.array(B)
+    U, _, Vt = np.linalg.svd(A.T @ B)
+    R = Vt.T @ np.diag([1, 1, np.sign(np.linalg.det(Vt.T @ U.T))]) @ U.T
+    return R, float(np.median(np.linalg.norm(A @ R.T - B, axis=1))), len(A)
