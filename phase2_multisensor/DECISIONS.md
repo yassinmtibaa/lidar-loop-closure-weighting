@@ -499,3 +499,28 @@
   expected for an x-forward IMU; gyro_z correlates +0.99 with the FOG rate and acc_y +0.15 with v x yaw rate (both
   as expected). The Segway pitches when it accelerates, which could explain acc_x, or the IMU x axis could be
   reversed. To be settled with a registered test before more fusion runs that use I with W.
+
+## 2026-10-25: IMU axis test (fixed BEFORE running it)
+- Yassine: do the recommended check. Smoke session only.
+- Test: predict the IMU's specific force from ground truth, f = R_gt^T (a_gt - g), with a_gt the second derivative
+  of ground-truth position (NED, smoothed over 0.5 s), g = (0, 0, 9.81) and R_gt the ground-truth attitude, so
+  Segway pitch is included. Also predict the angular rate from ground-truth attitude. Correlate each predicted axis
+  with the measured ms25 axis (same smoothing), over the whole session.
+- P2.3m: the IMU is x-forward as assumed: corr(acc_x, f_x) > +0.5 and corr(gyro_z, w_z) > +0.5.
+  If corr(acc_x, f_x) < -0.5 the x axis is reversed (then y too, since gyro_z is fine): the reader is fixed and the
+  I subsets of noise model v3 are re-run with the same predictions as v3. Between -0.5 and 0.5: inconclusive,
+  nothing changes.
+
+## 2026-10-25: IMU axis test result (results/imu_axis_check_2013-01-10.txt) -> P2.3m INCONCLUSIVE on acc_x;
+## axes as assumed, no reader change
+- Registered test (0.5 s smoothing): gyro vs ground-truth rate x +0.946, y +0.993, z +0.997 (all three axes match
+  an x-forward, y-right, z-down frame; a reversed x would also flip y and give negative x/y rate correlations).
+  acc vs predicted specific force: x +0.067, y +0.692, z -0.041. acc_x is between -0.5 and +0.5: INCONCLUSIVE by the
+  rule, so nothing changes. Cause: ground-truth position differentiated twice is too noisy at 0.5 s (predicted
+  forward-acceleration std 87 m/s^2).
+- Exploratory, not registered: with 2 s smoothing, acc correlations are x +0.76, y +0.73, z +0.59 (5 s: +0.61,
+  +0.71, +0.55). Together with the gyro this supports x-forward. The -0.75 against wheel acceleration is then the
+  Segway's pitch: tilting while it accelerates puts gravity on acc_x (std 0.60 m/s^2 from tilt alone).
+- So the IMU + wheels damage (I+W 242 m) is NOT an axis bug. Remaining suspects, not tested: the IMU noise and bias
+  walk are placeholders/at-rest values; the wheel factor is planar in the body frame, but on a pitching Segway the
+  wheels measure motion along the ground, not along body x.

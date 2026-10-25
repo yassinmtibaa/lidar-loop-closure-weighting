@@ -1,0 +1,4 @@
+axis x: corr(acc, predicted specific force) +0.067   corr(gyro, predicted rate) +0.946
+axis y: corr(acc, predicted specific force) +0.692   corr(gyro, predicted rate) +0.993
+axis z: corr(acc, predicted specific force) -0.041   corr(gyro, predicted rate) +0.997
+std predicted f_x from forward accel only vs from gravity tilt: 87.45784099852784 0.6002987270366996
