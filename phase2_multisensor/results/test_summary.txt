@@ -1,0 +1,34 @@
+run default  r1 2012-02-12: ATE 3.605 m  KITTI 1.650%  closures 8  dropped=0
+run default  r2 2012-02-12: ATE 2.870 m  KITTI 1.715%  closures 8  dropped=0
+run default  r3 2012-02-12: ATE 3.296 m  KITTI 1.609%  closures 8  dropped=0
+run default  r1 2012-06-15: ATE 2.027 m  KITTI 1.246%  closures 1  dropped=0
+run default  r2 2012-06-15: ATE 2.026 m  KITTI 1.239%  closures 1  dropped=0
+run default  r3 2012-06-15: ATE 2.047 m  KITTI 1.266%  closures 1  dropped=0
+run default  r1 2013-04-05: ATE 9.729 m  KITTI 2.120%  closures 4  dropped=0
+run default  r2 2013-04-05: ATE 9.784 m  KITTI 2.089%  closures 4  dropped=0
+run default  r3 2013-04-05: ATE 9.192 m  KITTI 2.130%  closures 3  dropped=0
+run W=1e3    r1 2012-02-12: ATE 3.044 m  KITTI 1.601%  closures 8  dropped=0
+run W=1e3    r2 2012-02-12: ATE 3.797 m  KITTI 1.577%  closures 8  dropped=0
+run W=1e3    r3 2012-02-12: ATE 3.082 m  KITTI 1.563%  closures 8  dropped=0
+run W=1e3    r1 2012-06-15: ATE 2.064 m  KITTI 1.253%  closures 1  dropped=0
+run W=1e3    r2 2012-06-15: ATE 2.565 m  KITTI 1.196%  closures 1  dropped=0
+run W=1e3    r3 2012-06-15: ATE 2.380 m  KITTI 1.246%  closures 1  dropped=0
+run W=1e3    r1 2013-04-05: ATE 14.368 m  KITTI 2.431%  closures 4  dropped=0
+run W=1e3    r2 2013-04-05: ATE 5.733 m  KITTI 1.812%  closures 4  dropped=0
+run W=1e3    r3 2013-04-05: ATE 4.919 m  KITTI 1.775%  closures 2  dropped=0
+
+session | metric | default range (mean) | W range (mean) | non-overlap verdict
+2012-02-12 | ATE m | 2.870-3.605 (3.257) | 3.044-3.797 (3.308) | within noise
+   ATE mean change W vs default: +1.6%
+2012-02-12 | KITTI % | 1.609-1.715 (1.658) | 1.563-1.601 (1.580) | W BETTER
+2012-06-15 | ATE m | 2.026-2.047 (2.033) | 2.064-2.565 (2.336) | W WORSE
+   ATE mean change W vs default: +14.9%
+2012-06-15 | KITTI % | 1.239-1.266 (1.250) | 1.196-1.253 (1.232) | within noise
+2013-04-05 | ATE m | 9.192-9.784 (9.568) | 4.919-14.368 (8.340) | within noise
+   ATE mean change W vs default: -12.8%
+2013-04-05 | KITTI % | 2.089-2.130 (2.113) | 1.775-2.431 (2.006) | within noise
+
+runs scored: 18/18
+KITTI mean over sessions: default 1.674%, W 1.606% (-4.0%)
+P2.1d: KITTI lower on average: True; no session ATE mean +>10%: False; => NOT MET
+FINISHED

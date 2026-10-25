@@ -153,3 +153,30 @@
   W lower on KITTI mean". Earlier claim retracted. Lesson: 3 runs underestimated KISS-SLAM's run-to-run spread on NCLT.
 - Consequence for the test protocol: keep 3 runs per condition as registered (P2.1d is on means), but report the
   6-run 05-26 spread alongside as the noise reference.
+
+## 2026-10-25: TEST result (2012-02-12, 2012-06-15, 2013-04-05), default x3 vs W=1e3 x3, run once -> P2.1d NOT MET
+- Run once, no re-tuning, on the accepted 2026-10-18 environment (check_env.sh --smoke passed before the runs).
+  6 runs in parallel per round, 3 rounds (scripts/run_test_once.sh). Weighting verified in every pose graph
+  (rotation info 1000 in all 9 W runs, 1 in all 9 default runs). No crashes, no NaN frames dropped.
+  Scored by scripts/summarize_test.py (metrics.py) -> results/test_summary.txt; eval.sh CSVs in results/*_test.csv.
+| session | KITTI % default | KITTI % W=1e3 | ATE m default | ATE m W=1e3 | ATE mean change | closures d / W |
+|---|---|---|---|---|---|---|
+| 2012-02-12 | 1.609-1.715 (1.658) | 1.563-1.601 (1.580) | 2.870-3.605 (3.257) | 3.044-3.797 (3.308) | +1.6% | 8/8/8 / 8/8/8 |
+| 2012-06-15 | 1.239-1.266 (1.250) | 1.196-1.253 (1.232) | 2.026-2.047 (2.033) | 2.064-2.565 (2.336) | +14.9% | 1/1/1 / 1/1/1 |
+| 2013-04-05 | 2.089-2.130 (2.113) | 1.775-2.431 (2.006) | 9.192-9.784 (9.568) | 4.919-14.368 (8.340) | -12.8% | 4/4/3 / 4/4/2 |
+- P2.1d part 1 (KITTI metric lower on average): yes, 1.674% -> 1.606% (-4.0%); W mean lower on all 3 sessions.
+- P2.1d part 2 (no session with ATE mean raised > 10%): FAILS on 2012-06-15 (+14.9%). => P2.1d NOT MET.
+- Non-overlap verdicts: 02-12 KITTI W BETTER, ATE within noise; 06-15 ATE W WORSE (W min 2.064 > default max 2.047),
+  KITTI within noise; 04-05 both within noise.
+- Honest reading:
+  - The 06-15 ATE failure is real by the rule but small in absolute terms (+0.30 m mean; the non-overlap margin is
+    0.017 m). Default happened to be very repeatable there (spread 0.02 m, 1 closure); the 6-run 05-26 noise reference
+    spread is ~1.4 m. It still counts: the rule was fixed in advance and is not relaxed afterwards.
+  - The validation observation "W runs are tighter" does NOT hold on test: on 04-05 W is far MORE spread (ATE
+    4.9-14.4 m, KITTI 1.775-2.431%); W r1 is worse than every default run on both metrics, r2/r3 better than every
+    default run. The -12.8% ATE mean there rests on 2 of 3 runs and is within noise.
+  - The KITTI-metric gain is consistent in sign (3/3 sessions) but small (-1.4 to -5.1%) and beyond noise on 1 of 3.
+  - Conclusion: rotation weighting W=1e3 chosen on KITTI does not transfer to NCLT as a reliable improvement.
+    It does not clearly hurt local accuracy and may help it slightly; it does not reliably keep global accuracy.
+    Not to be claimed as an improvement on NCLT.
+- Not explored (would be post-hoc): why 04-05 W r1 diverged (same 4 closures as r2); a W below 1e3; more runs.
