@@ -79,10 +79,10 @@ def estimate_noise(t, m, odom, G, gps):
 def run_one(args):
     subset, r = args
     g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None)
-    E, iters, converged = subsets.solve(g, init, keys)
+    E, iters, converged, solver = subsets.solve(g, init, keys)
     finite = bool(np.isfinite(E).all())
     ate, rpe, kitti, _ = metrics.compute(GT_POSES, E) if finite else (np.nan,) * 4
-    return dict(subset=subset, run=r + 1, finite=finite, converged=converged, iterations=iters,
+    return dict(subset=subset, run=r + 1, finite=finite, converged=converged, iterations=iters, solver=solver,
                 ate=ate, rpe100=rpe, kitti=kitti)
 
 

@@ -9,7 +9,8 @@ from scipy.spatial.transform import Rotation
 
 from fusion import sensors
 
-LOOSE = 1e3
+LOOSE = 10.0                       # unobserved axes (was 1e3: badly conditioned, DECISIONS)
+TIGHT = 1e-3                       # first-node anchor (was 1e-6)
 REG_SIGMA = (1.0, 10.0)            # rad, m per frame: weak smoothness, always on
 BIAS_PRIOR = (0.1, 0.01)           # acc m/s^2, gyro rad/s
 BIAS_WALK = (1e-3, 1e-4)           # per frame
@@ -139,11 +140,11 @@ def build(subset, m, noise, lidar_odom=None):
     for k in range(n):
         init.insert(X(k), gtsam.Pose3(traj[k]))
     # prior on the first node
-    rp = 0.01 if "I" in subset else 1e-6
+    rp = 0.01 if "I" in subset else TIGHT
     if "G" in subset:
-        graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(traj[0]), _sig([rp, rp, LOOSE], [LOOSE] * 3)))
+        graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(traj[0]), _sig([rp, rp, LOOSE], [100.0] * 3)))   # position free (100 m) when G anchors it
     else:
-        graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(T0), _sig([rp, rp, 1e-6], [1e-6] * 3)))
+        graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(T0), _sig([rp, rp, TIGHT], [TIGHT] * 3)))
     reg = _sig([REG_SIGMA[0]] * 3, [REG_SIGMA[1]] * 3)
     for k in range(n - 1):
         graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(), reg))
@@ -182,10 +183,21 @@ def build(subset, m, noise, lidar_odom=None):
 
 
 def solve(graph, init, keys, max_iterations=500):
-    """LM; returns (poses, iterations, converged)."""
-    p = gtsam.LevenbergMarquardtParams()
-    p.setMaxIterations(max_iterations)
-    p.setRelativeErrorTol(1e-8)
-    opt = gtsam.LevenbergMarquardtOptimizer(graph, init, p)
-    est = opt.optimize()
-    return np.array([est.atPose3(k).matrix() for k in keys]), opt.iterations(), opt.iterations() < max_iterations
+    """Dogleg with a QR linear solver, falling back to LM (QR) if it throws; returns (poses, iterations, converged,
+    solver name). Cholesky failed or stalled on IMU subsets (DECISIONS 2026-10-25)."""
+    try:
+        p = gtsam.DoglegParams()
+        p.setMaxIterations(max_iterations)
+        p.setRelativeErrorTol(1e-8)
+        p.setLinearSolverType("MULTIFRONTAL_QR")
+        opt, name = gtsam.DoglegOptimizer(graph, init, p), "dogleg"
+        est = opt.optimize()
+    except RuntimeError:
+        p = gtsam.LevenbergMarquardtParams()
+        p.setMaxIterations(max_iterations)
+        p.setRelativeErrorTol(1e-8)
+        p.setLinearSolverType("MULTIFRONTAL_QR")
+        opt, name = gtsam.LevenbergMarquardtOptimizer(graph, init, p), "lm"
+        est = opt.optimize()
+    poses = np.array([est.atPose3(k).matrix() for k in keys])
+    return poses, opt.iterations(), opt.iterations() < max_iterations, name

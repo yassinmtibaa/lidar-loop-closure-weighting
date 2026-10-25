@@ -364,3 +364,60 @@
   start); (2) a LiDAR noise model for correlated per-frame error (e.g. factors over 1 s instead of per frame).
   Both need their own predictions before use. The 2.3 exit criterion "noise band per subset" is only partly met:
   on the smoke session the band is zero (deterministic inputs); tune sessions need KISS-SLAM inputs or a sweep.
+
+## 2026-10-25: Phase 2.3 smoke, IMU convergence fix (fixed BEFORE re-running the subsets)
+- Yassine: go on with the next step (the IMU convergence fix, recommended).
+- Diagnosis on L+I: LM drops the cost 1e6x in 3 iterations, then creeps (relative decrease ~1e-5 per iteration,
+  lambda stuck at 0.1) for hundreds of iterations. Gauss-Newton and Dogleg throw "indeterminate linear system"
+  near the last velocities: the graph is badly conditioned, mixing 1e-6 sigmas (first-node prior) with 1e3 sigmas
+  ("loose" axes), a 1e9 ratio. On W+G, Dogleg reaches cost 37.6 where LM stops at 2662 after 500 iterations.
+- Fix (numerical only; sensor noise unchanged): first-node position prior with G 1e3 -> 100 m; other loose axes 1e3 -> 10 (rad or m per frame; the always-on smoothness
+  factor already bounds those axes at 1 rad / 10 m); first-node prior 1e-6 -> 1e-3. Solver: Dogleg first, LM if
+  Dogleg throws; 500 iterations, relative tolerance 1e-8, as before.
+- Predictions:
+  - P2.3e: at least 12 of the 15 non-converged subsets converge.
+  - P2.3f (the fix must not change the answer where there was one): every subset that converged before changes ATE
+    by less than 1%. If one changes by more, the earlier converged numbers were not optima either, and all verdicts
+    use the new numbers.
+- P2.3c and P2.3d are then re-judged on all decided pairs with the same amended rule; earlier verdicts stay in the
+  record.
+
+## 2026-10-25: result of the conditioning fix -> P2.3e NOT MET, P2.3f NOT MET; second fix registered
+- Re-run (superseded by the QR pass below; kept as
+  subsets_smoke_2013-01-10_pass3.csv): 0 of the 15 subsets converged (P2.3e NOT MET). Dogleg still threw
+  "indeterminate" on every IMU subset and fell back to LM, which crept to 500 iterations as before.
+- P2.3f NOT MET: G (-1.9%), FG (-2.1%), LWG (+2.4%) moved by more than 1%; others < 0.5%. W+G, which had not
+  converged, moved from 43.1 to 12.8 m (Dogleg). So "loose" sigmas and the G start prior are not purely numerical.
+- Diagnosis after: Dogleg with a QR linear solver (instead of Cholesky) converges on L+I in 18 iterations to a LOWER
+  cost (35028.4 vs LM's 35030.6 after 500 iterations) with ATE 33.6 m instead of 1.71 m. So LM's L+I answer was
+  not the optimum: it was stuck near its LiDAR start. With these noise values the optimum lets the trajectory bend
+  for almost no cost (LiDAR per-frame sigmas are large, see the jitter entry; the gyro bias can walk). Earlier L+I
+  numbers (including li_smoke's, with different placeholder noise) say nothing about the optimum of this model.
+- Second fix, fixed now before re-running: Dogleg with MULTIFRONTAL_QR for every subset (LM + QR as fallback),
+  everything else as in the conditioning fix. Prediction P2.3g: at least 12 of the 15 converge. P2.3c/d are then
+  judged on this pass. No further solver changes in this session whatever the outcome.
+
+## 2026-10-25: QR-solver pass (final for this session) -> P2.3g MET; verdicts re-judged
+- results/subsets_smoke_2013-01-10.csv, subsets_verdicts_2013-01-10.txt (earlier passes: *_lm50_unconverged,
+  *_pass2, *_pass3). 28/31 converge; 12 of the 15 earlier non-converged subsets now converge (P2.3g: MET, exactly at
+  the bar). Still not converged: WG, WFG, LIWG (500 iterations).
+| subset | ATE m | KITTI % | | subset | ATE m | KITTI % |
+|---|---|---|---|---|---|---|
+| L | 1.92 | 1.57 | | LI | 33.64 | 7.19 |
+| LF | 3.70 | 2.07 | | LIF | 1.98 | 1.71 |
+| LG | 10.57 | 10.05 | | LIG | 9.53 | 5.69 |
+| LW | 131.6 | 77.3 | | LIW | 124.2 | 76.1 |
+| LFG | 10.13 | 9.52 | | LIFG | 9.13 | 4.36 |
+| WF | 20.10 | 7.88 | | LIWF | 25.36 | 10.20 |
+| G | 11.76 | 71.92 | | LIWFG | 6.73 | 6.40 |
+- P2.3a MET (all finite). P2.3b MET (I 141.4, F 143.3, I+F 141.8 m; all converged now).
+- P2.3c NOT MET: adding G is worse on 3 of 12 decided pairs (L, LF, LIF -> +G), better on 9, 3 undecided.
+- P2.3d MET: 19 of 61 decided additions are worse, 34 better, 8 within, 14 undecided. Adding W is worse in 7 of 12
+  decided pairs, adding I in 6 of 12.
+- Reading: with ONE fixed sigma per sensor, estimated honestly against ground truth on this session, adding a sensor
+  is often harmful, and no subset beats LiDAR alone (1.92 m); the closest is L+I+F (1.98 m). Main causes, both inferred, not tested: (1) the LiDAR per-frame sigma
+  ignores that its error is jitter, so LiDAR is underweighted; (2) the wheel factor carries an uncorrected ~8% scale
+  error and a wheel-difference heading. L+I alone is now 33.6 m: at its optimum the IMU's gyro bias walk plus the
+  weak LiDAR weight let heading drift. This is a single session with in-sample noise: it motivates 2.5 (modelled,
+  per-constraint covariances), it does not test the hypothesis.
+- Stopped here as registered (no more solver changes this session).

@@ -16,7 +16,7 @@ ORDER = "LIWFG"
 key = lambda s: "".join(c for c in ORDER if c in s)
 out = []
 out.append(f"P2.3a finite for all 31 x 3: {all(fin.values()) and len(fin) == 31}; "
-           f"converged (< 500 LM iterations): {sum(conv.values())}/31 -> "
+           f"converged (< 500 solver iterations): {sum(conv.values())}/31 -> "
            f"not converged: {' '.join(sorted((s for s in conv if not conv[s]), key=lambda s: (len(s), s)))}")
 path = 1138.8
 for s in ("I", "F", "IF"):
