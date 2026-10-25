@@ -30,8 +30,11 @@ for m in PIL:pillow matplotlib:matplotlib scipy:scipy; do i=${m%%:*}; n=${m##*:}
 F=$(ls "$VENVS"/kiss-slam/lib/python3*/site-packages/kiss_slam/slam.py 2>/dev/null | head -1)
 [ -n "$F" ] && grep -q "KS_ODOM_INFO" "$F" && ok "KISS-SLAM weighting patch present (needed for every W run)" || bad "KISS-SLAM weighting patch MISSING: W runs would silently use np.eye(6)"
 "$VENVS/evo/bin/python" -c 'import evo' 2>/dev/null && ok "evo $("$VENVS/evo/bin/python" -m pip show evo 2>/dev/null | awk '/^Version/{print $2}')" || bad "evo does not import"
-echo "== Phase 2.2 (future)"
-python3 -c 'import gtsam' 2>/dev/null && ok "gtsam importable from system python" || info "gtsam not installed yet (needed from Phase 2.2)"
+echo "== Phase 2.2 fusion venv (phase2_multisensor/.venv)"
+FPY="$ROOT/.venv/bin/python"
+if [ -x "$FPY" ] && V=$("$FPY" -c 'import sys,gtsam,numpy,scipy,importlib.metadata as m; print(f"py{sys.version_info.major}.{sys.version_info.minor} gtsam {m.version("gtsam")} numpy {numpy.__version__} scipy {scipy.__version__}")' 2>/dev/null); then
+  ok "fusion venv runs ($V)"
+else bad "fusion venv missing or broken: uv venv .venv --python 3.12 && uv pip install --python .venv/bin/python -r requirements-fusion.txt"; fi
 echo "== Data"
 for s in 2012-01-15 2012-02-12 2012-04-29 2012-05-26 2012-06-15 2012-08-04 2012-10-28 2013-01-10 2013-04-05; do
   [ -d "$ROOT/data/nclt/$s" ] || bad "session $s missing"; done

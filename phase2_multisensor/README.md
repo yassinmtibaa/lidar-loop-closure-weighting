@@ -16,6 +16,8 @@ per constraint and per sensor, and tests every sensor combination.
 - `DECISIONS.md` dated decisions and predictions, written BEFORE each run
 - `DATASETS.md`  dataset comparison and choice
 - `scripts/ configs/ results/ data/` same conventions as Phase 1 (`data/` is not tracked)
+- `fusion/`      GTSAM backbone (`graph.py`), KISS-SLAM g2o reader, NCLT sensor readers and factor helpers
+- `tests/`       pytest checks (backbone on synthetic data, readers on the smoke session 2013-01-10)
 
 **Rules carried over from Phase 1**
 1. Predictions and acceptance rules go in `DECISIONS.md` before a run, never after.

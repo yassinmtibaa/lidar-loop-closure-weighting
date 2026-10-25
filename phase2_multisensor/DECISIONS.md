@@ -180,3 +180,80 @@
     It does not clearly hurt local accuracy and may help it slightly; it does not reliably keep global accuracy.
     Not to be claimed as an improvement on NCLT.
 - Not explored (would be post-hoc): why 04-05 W r1 diverged (same 4 closures as r2); a W below 1e3; more runs.
+
+## 2026-10-25: Phase 2.2 start (GTSAM backbone + NCLT sensor readers). Fixed BEFORE any GTSAM run.
+- Scope agreed with Yassine: (a) GTSAM pose graph taking KISS-ICP odometry + loop-closure factors, checked against the
+  identity-weighting KISS-SLAM baseline on the TUNE sessions only; (b) readers for IMU, FOG, wheels, standard GPS
+  (RTK stays excluded), wheels + FOG first, unit-tested on the smoke session 2013-01-10. Test sessions are spent:
+  never used in 2.2. No full sweeps here (supercomputer).
+- Environment: separate uv venv `phase2_multisensor/.venv` (uv Python 3.12.15): gtsam 4.3.0, numpy 2.5.4,
+  scipy 1.18.1, pytest 9.1.1. The KISS tools (pipx venvs) are untouched.
+- What KISS-SLAM outputs (read from its code, kiss_slam 0.0.2): stage 1 = keypose graph (one node per ~100 m local
+  map, odometry factor per local map, closure factors, node 0 fixed), written to local_maps/local_map_graph.g2o with
+  the final keyposes. Stage 2 = per-frame graph: per-frame odometry factors, and in each local map the last frame is
+  held fixed at (optimized keypose x local end pose); written to trajectory.g2o (vertices = the output poses, equal to
+  <seq>_poses.npy to 5e-4, the g2o text precision). Edge convention checked: measurement = inv(T_i) T_j.
+  Information order in g2o is (translation, rotation); GTSAM Pose3 tangent order is (rotation, translation).
+- Reproduction check: GTSAM rebuilds both stages from the factors in those two g2o files (no new KISS-SLAM runs, no
+  new closure detection) for the 9 existing default runs (identity weights) on the 3 tune sessions, plus the 9 existing
+  W=1e3 runs (rotation information 1000 on odometry), which also checks the information-order permutation.
+  Stage 1: Levenberg-Marquardt from the odometry-chain initial guess (not from KISS-SLAM's answer).
+- Acceptance (each of the 18 graphs, fixed now; tolerances are not widened afterwards):
+  - A1: stage-1 keyposes vs KISS-SLAM's final keyposes: max translation difference < 0.10 m and max rotation
+    difference < 0.1 deg.
+  - A2: final per-frame trajectory scored with the same code as metrics.py: |ATE difference| < 0.02 m and
+    |KITTI-metric difference| < 0.002 percentage points vs KISS-SLAM's own output. For scale: the smallest 3-run
+    spread on tune sessions is 0.76 m ATE (default, 2012-01-15) and 0.002 pp KITTI (same session).
+  - Determinism: two GTSAM runs on the same graph agree to < 1e-9 m.
+  - Pass = all 18 meet A1 and A2. Any failure is reported with its cause (iterations, local minimum, conventions).
+- P2.2c (secondary): the odometry-only chain (each default run's per-frame odometry, no closures) has a KITTI metric
+  within 5% of the KISS-ICP baseline on each tune session, for all 3 runs. ATE is reported without a prediction
+  (one bad stretch drives 2012-08-04's 30.9 m).
+- Sensor readers, all developed and checked on 2013-01-10 only. Predictions:
+  - P2.2d: wheel speed + FOG heading 2D dead reckoning on 2013-01-10 has 2D ATE (SE2-aligned) under 5% of the
+    ground-truth path (1138.8 m), i.e. < 57 m.
+  - P2.2e: wheel-only dead reckoning (heading from differential wheel speed) is at least 3x worse in 2D ATE than
+    wheels + FOG. Its track width is fitted on 2013-01-10 against FOG yaw rate (in-sample; frozen afterwards and
+    written here when fitted).
+
+## 2026-10-25: Phase 2.2 GTSAM reproduction result (tune sessions only) -> PASSED after a convention fix
+- scripts/gtsam_reproduce.py -> results/gtsam_reproduction.csv / .txt, results/gtsam_odom_chain.csv.
+- First attempt FAILED A1 on most graphs: the g2o information matrix was only permuted (t,R) -> (R,t). Keyposes then
+  differed by up to 3.35 m (2012-04-29 default r1) and ATE by up to 1.04 m. Diagnosis: GTSAM reached the same minimum
+  from the odometry guess and from KISS-SLAM's answer, with a LOWER cost than KISS-SLAM's answer, so KISS-SLAM was
+  minimizing a different cost, not stopping early. Cause: KISS-SLAM's C++ uses g2o EdgeSE3 (symbols checked in
+  kiss_slam_pybind.so), whose rotation error is the quaternion vector part (~angle/2), while GTSAM's BetweenFactor
+  uses the angle. Fix: rotation information x 1/4 (cross terms x 1/2) when converting g2o information
+  (fusion/graph.py, info_g2o_to_gtsam). The permute-only results stay in the CSV (mapping=permute_only):
+  A1 6/18, A2 8/18. Tolerances were not changed.
+- With the conversion (mapping=quaternion), all 18 graphs (9 default + 9 W=1e3):
+  | check | worst over 18 graphs | tolerance | result |
+  |---|---|---|---|
+  | A1 keypose translation | 0.0096 m | 0.10 m | 18/18 |
+  | A1 keypose rotation | 0.0026 deg | 0.1 deg | 18/18 |
+  | A2 ATE difference | 0.0011 m | 0.02 m | 18/18 |
+  | A2 KITTI-metric difference | 0.00005 pp | 0.002 pp | 18/18 |
+  | any frame, position difference | 0.0103 m | (reported) | |
+  | determinism (two GTSAM runs) | 0 m | 1e-9 m | met |
+- Meaning: given KISS-SLAM's own odometry and closure factors, the GTSAM backbone reproduces its trajectories and
+  metrics far below run-to-run noise. Closure DETECTION is still KISS-SLAM's; 2.2 does not replace it.
+- Lesson for later phases: any covariance fed to GTSAM is on the angle (radians), not g2o's half-angle. The W=1e3
+  rotation information from Phase 1 equals 250 in GTSAM's convention.
+- P2.2c (odometry chain KITTI within 5% of KISS-ICP on each tune session): NOT MET, 6/9 runs.
+  2012-01-15 and 2012-04-29 met in all runs (-4.2% to +0.5%); 2012-08-04 failed in all 3 runs: chain KITTI
+  1.959 / 1.619 / 2.061 % vs KISS-ICP 1.735 % (+12.9 / -6.7 / +18.8 %). Chain ATE 08-04: 15.4 / 21.4 / 13.6 m vs
+  KISS-ICP 30.9 m.
+  Observation (not pre-registered, not a claim): on 2012-08-04 KISS-SLAM's own odometry differs a lot from run to run,
+  so part of KISS-SLAM's run-to-run spread there comes from odometry, not only from closures; the final SLAM KITTI
+  order of the 3 runs (r2 < r1 < r3) matches the chain's. Checking this would need its own pre-registered test.
+
+## 2026-10-25: sensor-reader conventions found on 2013-01-10 (before evaluating P2.2d / P2.2e)
+- kvh.csv heading is counterclockwise-positive: its increments correlate -0.999 with ground-truth yaw. The reader
+  negates it so FOG heading, ground-truth yaw and the z-down body frame agree (heading grows turning right).
+- Ground truth is NED-like: direction of motion atan2(dy, dx) matches ground-truth yaw (median offset -0.001 rad).
+- Wheel track width fitted against FOG yaw rate (samples moving > 0.2 m/s): b = 0.6125 m. FROZEN for P2.2e and later.
+- Seen while checking units (before P2.2d was evaluated): wheel-integrated distance 1233.6 m vs ground-truth path
+  1138.8 m, i.e. wheel speeds read ~8% high on this session. Not corrected (P2.2d is evaluated as registered);
+  a wheel scale factor is a Phase 2.3 calibration question.
+- IMU (ms25) at rest: |acc| = 9.805 m/s^2, gyro mean < 0.004 rad/s per axis (first 30 samples).
+- GPS (gps.csv): mode 2 (2940 rows) or 3 (4246 rows); num_sats is always 0 on this session (unused); one 39.6 s gap.

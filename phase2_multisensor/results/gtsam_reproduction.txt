@@ -1,0 +1,39 @@
+2012-01-15 slam_default r1 quaternion   A1 0.0024 m 0.0010 deg | ATE 3.0847->3.0849 KITTI 1.3969->1.3969 | A1 True A2 True
+2012-01-15 slam_default r1 permute_only A1 0.4658 m 0.0951 deg | ATE 3.0847->3.0490 KITTI 1.3969->1.3961 | A1 False A2 False
+2012-01-15 slam_default r2 quaternion   A1 0.0096 m 0.0017 deg | ATE 2.6101->2.6102 KITTI 1.3974->1.3974 | A1 True A2 True
+2012-01-15 slam_default r2 permute_only A1 0.0700 m 0.0140 deg | ATE 2.6101->2.6105 KITTI 1.3974->1.3973 | A1 True A2 True
+2012-01-15 slam_default r3 quaternion   A1 0.0072 m 0.0019 deg | ATE 2.3170->2.3167 KITTI 1.3948->1.3948 | A1 True A2 True
+2012-01-15 slam_default r3 permute_only A1 0.5219 m 0.2152 deg | ATE 2.3170->2.3346 KITTI 1.3948->1.3894 | A1 False A2 False
+2012-01-15 w_rot1e3 r1 quaternion   A1 0.0014 m 0.0002 deg | ATE 3.0828->3.0827 KITTI 1.4130->1.4130 | A1 True A2 True
+2012-01-15 w_rot1e3 r1 permute_only A1 0.8379 m 0.2173 deg | ATE 3.0828->3.0977 KITTI 1.4130->1.4135 | A1 False A2 True
+2012-01-15 w_rot1e3 r2 quaternion   A1 0.0011 m 0.0002 deg | ATE 2.7086->2.7085 KITTI 1.3912->1.3912 | A1 True A2 True
+2012-01-15 w_rot1e3 r2 permute_only A1 0.5294 m 0.2748 deg | ATE 2.7086->2.7359 KITTI 1.3912->1.3888 | A1 False A2 False
+2012-01-15 w_rot1e3 r3 quaternion   A1 0.0008 m 0.0002 deg | ATE 2.7131->2.7130 KITTI 1.3726->1.3726 | A1 True A2 True
+2012-01-15 w_rot1e3 r3 permute_only A1 0.5559 m 0.2307 deg | ATE 2.7131->2.7821 KITTI 1.3726->1.3714 | A1 False A2 False
+2012-04-29 slam_default r1 quaternion   A1 0.0086 m 0.0026 deg | ATE 6.3679->6.3671 KITTI 1.4737->1.4737 | A1 True A2 True
+2012-04-29 slam_default r1 permute_only A1 3.3495 m 0.5423 deg | ATE 6.3679->5.3235 KITTI 1.4737->1.4344 | A1 False A2 False
+2012-04-29 slam_default r2 quaternion   A1 0.0044 m 0.0010 deg | ATE 2.1357->2.1368 KITTI 1.4373->1.4374 | A1 True A2 True
+2012-04-29 slam_default r2 permute_only A1 0.0744 m 0.0188 deg | ATE 2.1357->2.1205 KITTI 1.4373->1.4361 | A1 True A2 True
+2012-04-29 slam_default r3 quaternion   A1 0.0022 m 0.0007 deg | ATE 2.0139->2.0145 KITTI 1.4152->1.4153 | A1 True A2 True
+2012-04-29 slam_default r3 permute_only A1 0.0291 m 0.0089 deg | ATE 2.0139->2.0073 KITTI 1.4152->1.4147 | A1 True A2 True
+2012-04-29 w_rot1e3 r1 quaternion   A1 0.0011 m 0.0002 deg | ATE 1.9958->1.9957 KITTI 1.4033->1.4033 | A1 True A2 True
+2012-04-29 w_rot1e3 r1 permute_only A1 0.1565 m 0.0929 deg | ATE 1.9958->2.0000 KITTI 1.4033->1.4054 | A1 False A2 False
+2012-04-29 w_rot1e3 r2 quaternion   A1 0.0014 m 0.0002 deg | ATE 1.8983->1.8983 KITTI 1.4075->1.4075 | A1 True A2 True
+2012-04-29 w_rot1e3 r2 permute_only A1 0.1529 m 0.0910 deg | ATE 1.8983->1.9003 KITTI 1.4075->1.4097 | A1 False A2 False
+2012-04-29 w_rot1e3 r3 quaternion   A1 0.0012 m 0.0001 deg | ATE 1.7351->1.7350 KITTI 1.3981->1.3981 | A1 True A2 True
+2012-04-29 w_rot1e3 r3 permute_only A1 0.1704 m 0.0802 deg | ATE 1.7351->1.7531 KITTI 1.3981->1.3997 | A1 False A2 True
+2012-08-04 slam_default r1 quaternion   A1 0.0025 m 0.0010 deg | ATE 3.7352->3.7349 KITTI 1.7750->1.7750 | A1 True A2 True
+2012-08-04 slam_default r1 permute_only A1 0.0024 m 0.0014 deg | ATE 3.7352->3.7345 KITTI 1.7750->1.7751 | A1 True A2 True
+2012-08-04 slam_default r2 quaternion   A1 0.0019 m 0.0008 deg | ATE 2.9187->2.9187 KITTI 1.6378->1.6378 | A1 True A2 True
+2012-08-04 slam_default r2 permute_only A1 0.0047 m 0.0018 deg | ATE 2.9187->2.9183 KITTI 1.6378->1.6378 | A1 True A2 True
+2012-08-04 slam_default r3 quaternion   A1 0.0018 m 0.0009 deg | ATE 5.9609->5.9610 KITTI 1.8867->1.8867 | A1 True A2 True
+2012-08-04 slam_default r3 permute_only A1 0.0025 m 0.0010 deg | ATE 5.9609->5.9605 KITTI 1.8867->1.8867 | A1 True A2 True
+2012-08-04 w_rot1e3 r1 quaternion   A1 0.0015 m 0.0006 deg | ATE 2.6011->2.6013 KITTI 1.6656->1.6657 | A1 True A2 True
+2012-08-04 w_rot1e3 r1 permute_only A1 1.9694 m 0.8137 deg | ATE 2.6011->2.5099 KITTI 1.6656->1.6644 | A1 False A2 False
+2012-08-04 w_rot1e3 r2 quaternion   A1 0.0012 m 0.0006 deg | ATE 5.4156->5.4154 KITTI 1.7620->1.7620 | A1 True A2 True
+2012-08-04 w_rot1e3 r2 permute_only A1 1.2355 m 0.8475 deg | ATE 5.4156->5.1761 KITTI 1.7620->1.7358 | A1 False A2 False
+2012-08-04 w_rot1e3 r3 quaternion   A1 0.0019 m 0.0007 deg | ATE 5.3214->5.3212 KITTI 1.7482->1.7482 | A1 True A2 True
+2012-08-04 w_rot1e3 r3 permute_only A1 1.2610 m 0.7933 deg | ATE 5.3214->5.1146 KITTI 1.7482->1.7268 | A1 False A2 False
+quaternion mapping: A1 18/18, A2 18/18, determinism max 0.00e+00 m
+permute-only mapping: A1 6/18, A2 8/18
+P2.2c: 6/9

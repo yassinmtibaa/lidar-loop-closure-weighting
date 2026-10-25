@@ -1,0 +1,4 @@
+2013-01-10 wheels+FOG   2D ATE   12.31 m =  1.08% of 1138.8 m path; integrated distance 1229.1 m
+2013-01-10 wheels only  2D ATE  113.03 m =  9.93% of 1138.8 m path; integrated distance 1229.1 m
+P2.2d (wheels+FOG ATE < 5% of path): MET
+P2.2e (wheels-only ATE >= 3x wheels+FOG): ratio 9.2 -> MET

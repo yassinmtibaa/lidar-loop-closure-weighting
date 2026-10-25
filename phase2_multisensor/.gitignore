@@ -2,3 +2,4 @@ data/
 results/*_seq*/
 results/*.log
 __pycache__/
+.venv/
