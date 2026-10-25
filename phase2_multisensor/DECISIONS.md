@@ -462,3 +462,40 @@
   and slip (W alone 111 m even after scaling), GPS errors are correlated over minutes, and the IMU bias walk is a
   placeholder. Per-constraint covariance (2.5) is the next tool; the IMU bias walk and GPS correlation are open
   noise-model questions to register before any tune-session run.
+
+## 2026-10-25: noise model v3 = first per-measurement noise (2.5 preview), fixed BEFORE any v3 run
+- Yassine: do the recommendation (per-measurement noise on the smoke session). Smoke only, in-sample: ground truth
+  is used to FIT the model's few parameters, never at run time. Same graph, solver and rule as v2; *_v3 files.
+- Built on v2 (wheel scale 0.925, drift-equivalent L and F sigmas, IMU unchanged). Two changes:
+  - W, per frame: sigma_k = s * (a + b * u_k) for each W component, u_k = |wheel-derived yaw change| in the frame
+    (the wheel factor's own data, so W-only subsets can use it). a, b: least-squares line through the per-frame
+    robust residual sigma in 5 quantile bins of u; s rescales so the median frame keeps its v2 drift-equivalent sigma.
+  - G, per fix: sigmas x sqrt(max(1, tau * rate)), tau = first lag (s) where the autocorrelation of the 3D-fix
+    residual drops below 1/e, rate = fixes per second. Correlated fixes then count as fewer independent ones.
+- No NEES yet (needs marginal covariances on 5104 nodes; deferred to tune-session runs).
+- Predictions (v3 vs v2):
+  - P2.5a: L -> L+W is no longer worse.
+  - P2.5b: L -> L+G is no longer worse.
+  - P2.5c: fewer than 10 decided additions are worse (v2: 18 of 65).
+
+## 2026-10-25: noise model v3 result (results/*_v3.*) -> P2.5a, P2.5b, P2.5c NOT MET
+- Fitted (noise_2013-01-10_v3.txt): W sigmas grow with the wheel-derived turn (per-frame yaw sigma 0.012-0.039 rad,
+  x 0.022-0.053 m); GPS 3D-fix residual correlation time 16 s at 3.2 fixes/s -> GPS sigmas x7.1.
+- 30/31 converge (IWG does not).
+| subset | ATE v2 | ATE v3 | | subset | ATE v2 | ATE v3 |
+|---|---|---|---|---|---|---|
+| L | 1.93 | 1.93 | | LIG | 7.00 | 3.51 |
+| LW | 20.07 | 18.54 | | LIFG | 6.84 | 3.31 |
+| LG | 7.82 | 3.89 | | LIWG | 6.85 | 3.60 |
+| LFG | 7.57 | 4.01 | | LIWFG | 6.69 | 3.39 |
+| IWFG | 10.46 | 5.55 | | IW | 227.7 | 242.2 |
+- P2.5a NOT MET: L -> L+W still worse (18.5 m). The turn-dependent wheel sigma barely changed anything.
+- P2.5b NOT MET: L -> L+G still worse (3.89 m), but GPS harm halved in every L subset (e.g. LG 7.8 -> 3.9 m).
+- P2.5c NOT MET: 18 of 65 decided additions worse (same count as v2); 40 better (v2 38).
+- Reading: modelling GPS correlation is the one change here that clearly helped. Wheels remain harmful with any of
+  the three models; adding W to I is the worst case (I+W 242 m, worse than either alone), which looks less like
+  noise weighting and more like a disagreement between the IMU and wheel factors.
+- Open check, NOT concluded: IMU acc_x correlates -0.75 with wheel-derived forward acceleration, where +1 would be
+  expected for an x-forward IMU; gyro_z correlates +0.99 with the FOG rate and acc_y +0.15 with v x yaw rate (both
+  as expected). The Segway pitches when it accelerates, which could explain acc_x, or the IMU x axis could be
+  reversed. To be settled with a registered test before more fusion runs that use I with W.

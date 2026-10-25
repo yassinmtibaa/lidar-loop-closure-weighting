@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase 2.3 on the smoke session (DECISIONS 2026-10-25): estimate per-sensor noise, then run all 31 sensor subsets
-on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2] [jobs]
+on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3] [jobs]
 Writes results/noise_2013-01-10.txt and results/subsets_smoke_2013-01-10.csv."""
 import csv
 import itertools
@@ -117,6 +117,56 @@ def estimate_noise_v2(t, m, odom, G, gps, window=50):
     return noise, lines
 
 
+def estimate_noise_v3(t, m, odom, G, gps, bins=5):
+    """Noise model v3 (DECISIONS 2026-10-25): v2 plus per-frame wheel sigmas growing with the wheel-derived turn,
+    and GPS sigmas inflated for correlated fixes."""
+    v2, lines = estimate_noise_v2(t, m, odom, G, gps)          # also applies the wheel scale to m.wheel
+    rel = np.array([np.linalg.inv(G[k]) @ G[k + 1] for k in range(len(G) - 1)])
+    gyaw = np.arctan2(rel[:, 1, 0], rel[:, 0, 0])
+    r = m.wheel - np.c_[rel[:, 0, 3], rel[:, 1, 3], gyaw]
+    r[:, 2] = np.angle(np.exp(1j * r[:, 2]))
+    u = np.abs(m.wheel[:, 2])
+    edges = np.quantile(u, np.linspace(0, 1, bins + 1))
+    which = np.clip(np.searchsorted(edges, u, side="right") - 1, 0, bins - 1)
+    centers = np.array([np.median(u[which == b]) for b in range(bins)])
+    sig = np.array([robust(r[which == b]) for b in range(bins)])          # (bins, 3)
+    per_frame = np.empty_like(r)
+    fits = []
+    for c in range(3):
+        b_, a_ = np.polyfit(centers, sig[:, c], 1)
+        raw = np.maximum(a_ + b_ * u, 1e-6)
+        per_frame[:, c] = raw * v2.wheel[c] / np.median(raw)          # median frame keeps its v2 sigma
+        fits.append((a_, b_))
+    # GPS residual autocorrelation (3D fixes, horizontal)
+    k = np.array([g[0] for g in m.gps]); ned = np.array([g[1] for g in m.gps]); mode = np.array([g[2] for g in m.gps])
+    sel = mode == 3
+    e = ned[sel, :2] - G[k[sel], :2, 3]
+    e = e - np.median(e, axis=0)
+    tt = t[k[sel]] / 1e6
+    rate = (len(tt) - 1) / (tt[-1] - tt[0])
+    tau = None
+    for lag in np.arange(1.0, 600.0, 1.0):
+        i = np.searchsorted(tt, tt + lag)
+        ok = i < len(tt)
+        ac = np.mean([np.corrcoef(e[ok, d], e[i[ok], d])[0, 1] for d in (0, 1)])
+        if ac < 1 / np.e:
+            tau = lag
+            break
+    tau = tau or 600.0
+    infl = float(np.sqrt(max(1.0, tau * rate)))
+    v3 = subsets.Noise(v2.lidar, v2.wheel, v2.fog_yaw, v2.gps3, v2.gps2, v2.acc_density, v2.gyro_density,
+                       wheel_per_frame=per_frame, gps_inflation=infl)
+    lines += ["noise model v3:",
+              "W sigma(u) line fits per component (a, b) on per-frame residuals vs |wheel yaw|: "
+              + ", ".join(f"({a_:.4g}, {b_:.4g})" for a_, b_ in fits),
+              f"W bins (|wheel yaw| median rad): {np.array2string(centers, precision=4)}; per-bin sigmas x/y/yaw:\n"
+              + np.array2string(sig, precision=4),
+              f"W per-frame sigma ranges: x {per_frame[:, 0].min():.4f}-{per_frame[:, 0].max():.4f} m, "
+              f"yaw {per_frame[:, 2].min():.4f}-{per_frame[:, 2].max():.4f} rad",
+              f"G residual correlation time tau = {tau:.0f} s at {rate:.2f} fixes/s -> sigma inflation x{infl:.2f}"]
+    return v3, lines
+
+
 def run_one(args):
     subset, r = args
     g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None)
@@ -134,9 +184,9 @@ def init_worker(m, noise, odom, G):
 
 if __name__ == "__main__":
     t, m, odom, G, gps, R_LI = setup()
-    v2 = "--v2" in sys.argv
-    suffix = "_v2" if v2 else ""
-    noise, lines = (estimate_noise_v2 if v2 else estimate_noise)(t, m, odom, G, gps)
+    model = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
+    suffix = "" if model == "v1" else f"_{model}"
+    noise, lines = {"v1": estimate_noise, "v2": estimate_noise_v2, "v3": estimate_noise_v3}[model](t, m, odom, G, gps)
     print("\n".join(lines))
     open(os.path.join(OUT, f"noise_{SEQ}{suffix}.txt"), "w").write("\n".join(lines) + "\n")
     if "--noise-only" in sys.argv:

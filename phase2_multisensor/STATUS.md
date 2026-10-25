@@ -27,8 +27,10 @@ written, tune + validation sessions unpacked.
    (1.92 m ATE); 19 of 61 decided additions make things worse (P2.3d met, P2.3c not met). See DECISIONS.
 11. DONE 2026-10-25: noise model v2 (drift-equivalent sigmas over 50-frame windows + wheel scale 0.925): damage
    much smaller (L+W 131 -> 20 m, L+I 34 -> 3.3 m) but 18 of 65 additions still worse; P2.3h/i/j not met, k met.
-12. NEXT: register and test per-constraint noise (2.5 ideas: wheel slip on turns, GPS correlation, IMU bias walk)
-   on the smoke session; then 2.4/2.5 on tune sessions (supercomputer). Still pending: Phase 2.1 write-up.
+12. DONE 2026-10-25: noise model v3 (turn-dependent wheel sigma, GPS correlation inflation x7.1): GPS harm halved
+   (L+G 7.8 -> 3.9 m) but 18 additions still worse; P2.5a/b/c not met.
+13. NEXT: check the IMU x axis vs wheels (acc_x vs wheel acceleration corr -0.75; Segway pitch or reversed axis?),
+   predictions first; then decide on tune-session runs (supercomputer). Still pending: Phase 2.1 write-up.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember

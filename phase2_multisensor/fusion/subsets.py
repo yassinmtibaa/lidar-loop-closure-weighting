@@ -26,6 +26,8 @@ class Noise:
     gps2: np.ndarray         # (N, E) for 2D fixes
     acc_density: float
     gyro_density: float
+    wheel_per_frame: np.ndarray = None   # (n-1, 3) per-frame W sigmas (noise model v3); overrides `wheel`
+    gps_inflation: float = 1.0           # multiplies GPS sigmas (correlated fixes, v3)
 
 
 def planar(dx, dy, dyaw):
@@ -83,6 +85,13 @@ def _sig(rot, trans):
     return gtsam.noiseModel.Diagonal.Sigmas(np.r_[rot, trans].astype(float))
 
 
+def _wheel_noise(noise, n):
+    """One noise model for all W factors, or a list with one per frame (v3)."""
+    if noise.wheel_per_frame is None:
+        return _sig([LOOSE, LOOSE, noise.wheel[2]], [noise.wheel[0], noise.wheel[1], LOOSE])
+    return [_sig([LOOSE, LOOSE, w[2]], [w[0], w[1], LOOSE]) for w in noise.wheel_per_frame[: n - 1]]
+
+
 def _kabsch2d(a, b):
     ma, mb = a.mean(0), b.mean(0)
     U, _, Vt = np.linalg.svd((a - ma).T @ (b - mb))
@@ -115,11 +124,12 @@ def build(subset, m, noise, lidar_odom=None):
     if "L" in subset:
         rel.append(([gtsam.Pose3(z) for z in lidar_odom], gtsam.noiseModel.Diagonal.Sigmas(noise.lidar)))
     if "W" in subset:
-        rel.append(([gtsam.Pose3(planar(*w)) for w in m.wheel],
-                    _sig([LOOSE, LOOSE, noise.wheel[2]], [noise.wheel[0], noise.wheel[1], LOOSE])))
+        rel.append(([gtsam.Pose3(planar(*w)) for w in m.wheel], _wheel_noise(noise, n)))
     if "F" in subset:
         rel.append(([gtsam.Pose3(planar(0, 0, d)) for d in m.fog], _sig([LOOSE, LOOSE, noise.fog_yaw], [LOOSE] * 3)))
-    steps = [_local_step([(zs[k], nm) for zs, nm in rel]) for k in range(n - 1)] if rel else [np.eye(4)] * (n - 1)
+    pick = lambda nm, k: nm[k] if isinstance(nm, list) else nm
+    steps = ([_local_step([(zs[k], pick(nm, k)) for zs, nm in rel]) for k in range(n - 1)] if rel
+             else [np.eye(4)] * (n - 1))
     T0 = gtsam.Pose3(gtsam.Rot3.Ypr(0.0, m.pitch, m.roll) if "I" in subset else gtsam.Rot3(), np.zeros(3)).matrix()
     traj = [T0]
     for s in steps:
@@ -153,16 +163,17 @@ def build(subset, m, noise, lidar_odom=None):
         for k in range(n - 1):
             graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(lidar_odom[k]), nl))
     if "W" in subset:
-        nw = _sig([LOOSE, LOOSE, noise.wheel[2]], [noise.wheel[0], noise.wheel[1], LOOSE])
+        nw = _wheel_noise(noise, n)
         for k in range(n - 1):
-            graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(planar(*m.wheel[k])), nw))
+            graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(planar(*m.wheel[k])),
+                                               nw[k] if isinstance(nw, list) else nw))
     if "F" in subset:
         nf = _sig([LOOSE, LOOSE, noise.fog_yaw], [LOOSE] * 3)
         for k in range(n - 1):
             graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(planar(0, 0, m.fog[k])), nf))
     if "G" in subset:
-        n3 = gtsam.noiseModel.Diagonal.Sigmas(noise.gps3)
-        n2 = gtsam.noiseModel.Diagonal.Sigmas(np.r_[noise.gps2, LOOSE])
+        n3 = gtsam.noiseModel.Diagonal.Sigmas(noise.gps3 * noise.gps_inflation)
+        n2 = gtsam.noiseModel.Diagonal.Sigmas(np.r_[noise.gps2 * noise.gps_inflation, LOOSE])
         for k, ned, mode in m.gps:
             p = ned if mode == 3 else np.r_[ned[:2], traj[k, 2, 3]]
             graph.add(gtsam.GPSFactor(X(k), gtsam.Point3(*p), n3 if mode == 3 else n2))
