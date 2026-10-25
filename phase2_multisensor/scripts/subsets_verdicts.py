@@ -3,10 +3,12 @@
 A pair S -> S+x is judged only if every run of both subsets converged; otherwise it is 'undecided'."""
 import csv
 import os
+import sys
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-rows = list(csv.DictReader(open(os.path.join(ROOT, "results", "subsets_smoke_2013-01-10.csv"))))
+SUFFIX = sys.argv[1] if len(sys.argv) > 1 else ""      # e.g. _v2
+rows = list(csv.DictReader(open(os.path.join(ROOT, "results", f"subsets_smoke_2013-01-10{SUFFIX}.csv"))))
 ate, conv, fin = defaultdict(list), defaultdict(lambda: True), defaultdict(lambda: True)
 for r in rows:
     ate[r["subset"]].append(float(r["ate"]))
@@ -52,4 +54,4 @@ out.append(f"P2.3d (at least one addition worse; 75 pairs): worse {counts['all']
            + ("MET" if counts["all"]["worse"] else "NOT MET"))
 text = "\n".join(out + [""] + sorted(lines, key=lambda l: (l.split()[2], len(l.split()[0]), l)))
 print(text)
-open(os.path.join(ROOT, "results", "subsets_verdicts_2013-01-10.txt"), "w").write(text + "\n")
+open(os.path.join(ROOT, "results", f"subsets_verdicts_2013-01-10{SUFFIX}.txt"), "w").write(text + "\n")

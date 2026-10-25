@@ -25,8 +25,10 @@ written, tune + validation sessions unpacked.
 10. DONE 2026-10-25 (2.3, smoke session only): per-sensor noise estimated; all 31 subsets run. Solver: Dogleg with
    QR (Cholesky stalled or threw on IMU subsets); 28/31 converge (not WG, WFG, LIWG). No subset beats L alone
    (1.92 m ATE); 19 of 61 decided additions make things worse (P2.3d met, P2.3c not met). See DECISIONS.
-11. NEXT: (1) LiDAR noise model for correlated per-frame error (jitter) and wheel scale calibration, predictions
-   first; (2) then 2.4 on tune sessions (supercomputer). Still pending: Phase 2.1 write-up.
+11. DONE 2026-10-25: noise model v2 (drift-equivalent sigmas over 50-frame windows + wheel scale 0.925): damage
+   much smaller (L+W 131 -> 20 m, L+I 34 -> 3.3 m) but 18 of 65 additions still worse; P2.3h/i/j not met, k met.
+12. NEXT: register and test per-constraint noise (2.5 ideas: wheel slip on turns, GPS correlation, IMU bias walk)
+   on the smoke session; then 2.4/2.5 on tune sessions (supercomputer). Still pending: Phase 2.1 write-up.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember

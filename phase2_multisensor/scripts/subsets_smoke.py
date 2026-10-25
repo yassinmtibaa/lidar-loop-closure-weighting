@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase 2.3 on the smoke session (DECISIONS 2026-10-25): estimate per-sensor noise, then run all 31 sensor subsets
-on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [jobs]
+on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2] [jobs]
 Writes results/noise_2013-01-10.txt and results/subsets_smoke_2013-01-10.csv."""
 import csv
 import itertools
@@ -76,6 +76,47 @@ def estimate_noise(t, m, odom, G, gps):
     return noise, lines
 
 
+def compose(steps):
+    T = np.eye(4)
+    for z in steps:
+        T = T @ z
+    return T
+
+
+def estimate_noise_v2(t, m, odom, G, gps, window=50):
+    """Noise model v2 (DECISIONS 2026-10-25): wheel scale, then drift-equivalent sigmas for L, W, F
+    (robust sigma of residuals over non-overlapping `window`-frame spans, divided by sqrt(window))."""
+    base, _ = estimate_noise(t, m, odom, G, gps)
+    rel = np.array([np.linalg.inv(G[k]) @ G[k + 1] for k in range(len(G) - 1)])
+    d_gt = np.linalg.norm(rel[:, :2, 3], axis=1)
+    d_w = np.hypot(m.wheel[:, 0], m.wheel[:, 1])
+    moving = d_gt > 0.2
+    scale = float(np.median(d_gt[moving] / d_w[moving]))
+    m.wheel = m.wheel * scale
+    spans = [(a, a + window) for a in range(0, len(rel) - window + 1, window)]
+    gt_w = [compose(rel[a:b]) for a, b in spans]
+    lr = np.array([gtsam.Pose3.Logmap(gtsam.Pose3(np.linalg.inv(g) @ compose(o[a:b])))
+                   for o in odom for g, (a, b) in zip(gt_w, spans)])
+    lidar = robust(lr) / np.sqrt(window)
+    wr = []
+    for g, (a, b) in zip(gt_w, spans):
+        e = np.linalg.inv(g) @ compose([subsets.planar(*w) for w in m.wheel[a:b]])
+        wr.append([e[0, 3], e[1, 3], np.arctan2(e[1, 0], e[0, 0])])
+    wheel = robust(np.array(wr)) / np.sqrt(window)
+    gyaw = np.array([np.arctan2(g[1, 0], g[0, 0]) for g in gt_w])
+    fr = np.array([m.fog[a:b].sum() for a, b in spans]) - gyaw
+    fog = float(robust(np.angle(np.exp(1j * fr)))) / np.sqrt(window)
+    noise = subsets.Noise(lidar, wheel, fog, base.gps3, base.gps2, base.acc_density, base.gyro_density)
+    lines = [f"noise model v2: {len(spans)} windows of {window} frames, sigma = robust(window residual)/sqrt({window})",
+             f"wheel scale s = {scale:.4f} (median ground-truth / wheel distance, frames moving > 0.2 m)",
+             f"L drift-equivalent per-frame sigmas (rx ry rz rad, x y z m): {np.array2string(lidar, precision=5)}",
+             f"W drift-equivalent per-frame sigmas (x m, y m, yaw rad), scaled wheels: {np.array2string(wheel, precision=5)}",
+             f"F drift-equivalent per-frame yaw sigma: {fog:.6f} rad",
+             f"G and I unchanged: G3 {np.array2string(base.gps3, precision=3)}, G2 {np.array2string(base.gps2, precision=3)}, "
+             f"acc {base.acc_density:.5f}, gyro {base.gyro_density:.6f}"]
+    return noise, lines
+
+
 def run_one(args):
     subset, r = args
     g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None)
@@ -93,9 +134,11 @@ def init_worker(m, noise, odom, G):
 
 if __name__ == "__main__":
     t, m, odom, G, gps, R_LI = setup()
-    noise, lines = estimate_noise(t, m, odom, G, gps)
+    v2 = "--v2" in sys.argv
+    suffix = "_v2" if v2 else ""
+    noise, lines = (estimate_noise_v2 if v2 else estimate_noise)(t, m, odom, G, gps)
     print("\n".join(lines))
-    open(os.path.join(OUT, f"noise_{SEQ}.txt"), "w").write("\n".join(lines) + "\n")
+    open(os.path.join(OUT, f"noise_{SEQ}{suffix}.txt"), "w").write("\n".join(lines) + "\n")
     if "--noise-only" in sys.argv:
         sys.exit()
     jobs = int(sys.argv[-1]) if sys.argv[-1].isdigit() else 6
@@ -111,7 +154,7 @@ if __name__ == "__main__":
     for row in [r for r in rows if "L" not in r["subset"]]:      # inputs without L do not depend on the run
         rows += [dict(row, run=k) for k in (2, 3)]
     rows.sort(key=lambda r: (len(r["subset"]), r["subset"], r["run"]))
-    with open(os.path.join(OUT, f"subsets_smoke_{SEQ}.csv"), "w", newline="") as f:
+    with open(os.path.join(OUT, f"subsets_smoke_{SEQ}{suffix}.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, list(rows[0]))
         w.writeheader()
         w.writerows({k: (f"{v:.6f}" if isinstance(v, float) else v) for k, v in r.items()} for r in rows)

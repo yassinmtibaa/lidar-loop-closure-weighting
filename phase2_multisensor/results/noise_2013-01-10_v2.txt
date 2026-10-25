@@ -1,0 +1,6 @@
+noise model v2: 102 windows of 50 frames, sigma = robust(window residual)/sqrt(50)
+wheel scale s = 0.9253 (median ground-truth / wheel distance, frames moving > 0.2 m)
+L drift-equivalent per-frame sigmas (rx ry rz rad, x y z m): [0.00277 0.00186 0.00257 0.01674 0.02809 0.01568]
+W drift-equivalent per-frame sigmas (x m, y m, yaw rad), scaled wheels: [0.02597 0.11634 0.01514]
+F drift-equivalent per-frame yaw sigma: 0.002015 rad
+G and I unchanged: G3 [2.839 2.578 4.58 ], G2 [3.384 6.58 ], acc 0.00079, gyro 0.000801

@@ -421,3 +421,44 @@
   weak LiDAR weight let heading drift. This is a single session with in-sample noise: it motivates 2.5 (modelled,
   per-constraint covariances), it does not test the hypothesis.
 - Stopped here as registered (no more solver changes this session).
+
+## 2026-10-25: noise model v2 (drift-equivalent sigmas + wheel scale), fixed BEFORE any v2 run
+- Yassine: go on (LiDAR noise model and wheel calibration). Smoke session only, in-sample, same solver
+  (Dogleg + QR, 500 iterations), same graph, same comparison rule. Results go to *_v2 files; v1 stays.
+- Wheel scale: one factor s on both wheel speeds = median over frames moving > 0.2 m of (ground-truth distance /
+  wheel distance). Applied to the W factor; then W noise is re-estimated.
+- Drift-equivalent sigmas for the relative sensors (L, W, F): residuals are composed over non-overlapping windows of
+  N = 50 frames (10 s at the 5 Hz frame rate) and the per-frame sigma is robust_sigma(window residual) / sqrt(50).
+  This weights each sensor by how fast its error accumulates, not by its frame-to-frame jitter. N = 50 is chosen
+  now, not tuned. GPS and IMU noise unchanged.
+- Predictions (v2 vs v1 on the smoke session):
+  - P2.3h: L -> L+W is no longer worse (within or better).
+  - P2.3i: fewer than 10 decided additions are worse (v1: 19 of 61).
+  - P2.3j: L+I ATE is within 10% of L alone (v1: 33.6 vs 1.92 m).
+  - P2.3k: L -> L+G is still worse (GPS noise unchanged, its ~5 m errors are larger than LiDAR's 1.9 m ATE).
+
+## 2026-10-25: noise model v2 result (results/*_v2.*) -> P2.3h, P2.3i, P2.3j NOT MET; P2.3k MET
+- Estimated (noise_2013-01-10_v2.txt): wheel scale 0.925 (wheels read 8.1% long). Drift-equivalent per-frame
+  sigmas: L yaw 0.0026 rad (v1 0.012), L x/y 0.017/0.028 m (v1 0.070/0.048); W x 0.026 m, yaw 0.015 rad; F yaw
+  0.0020 rad (v1 0.0011). LiDAR now weighs ~20x more relative to its v1 weight.
+- 30/31 converge (only WG does not).
+| subset | ATE v1 | ATE v2 | | subset | ATE v1 | ATE v2 |
+|---|---|---|---|---|---|---|
+| L | 1.92 | 1.93 | | LIF | 1.98 | 1.81 |
+| LW | 131.6 | 20.07 | | LIG | 9.53 | 7.00 |
+| LI | 33.64 | 3.27 | | LWF | 21.28 | 9.14 |
+| LF | 3.70 | 2.62 | | LIWF | 25.36 | 8.62 |
+| LG | 10.57 | 7.82 | | LIWFG | 6.73 | 6.69 |
+| WF | 20.10 | 12.19 | | IWF | 177.6 | 205.4 |
+  (L moved 1.919 -> 1.926 because Dogleg stops at a slightly different point; both converged.)
+- P2.3h NOT MET: L -> L+W still worse (1.93 -> 20.07 m), though 6.6x less harmful than v1.
+- P2.3i NOT MET: 18 of 65 decided additions worse (v1: 19 of 61); 38 better, 14 within.
+- P2.3j NOT MET: L+I 3.27 m vs L 1.93 m (+70%), though 10x better than v1.
+- P2.3k MET: L -> L+G still worse (1.93 -> 7.82 m).
+- Not pre-registered, observed: adding L never makes a subset worse in v2 (14 better, 1 undecided); L+I+F (1.81 m)
+  is the first subset below L alone (1.93 m), by 6%, one session, in-sample noise: not a claim.
+- Reading: weighting by drift instead of jitter cut most of the damage (L+W 131 -> 20 m, L+I 34 -> 3.3 m) but did not
+  make added sensors harmless. One sigma per sensor still cannot express what remains: wheels lose heading on turns
+  and slip (W alone 111 m even after scaling), GPS errors are correlated over minutes, and the IMU bias walk is a
+  placeholder. Per-constraint covariance (2.5) is the next tool; the IMU bias walk and GPS correlation are open
+  noise-model questions to register before any tune-session run.
