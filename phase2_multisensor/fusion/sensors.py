@@ -137,3 +137,23 @@ def fit_imu_rotation(imu, frame_t, frame_poses, window=10, min_angle=0.05):
     U, _, Vt = np.linalg.svd(A.T @ B)
     R = Vt.T @ np.diag([1, 1, np.sign(np.linalg.det(Vt.T @ U.T))]) @ U.T
     return R, float(np.median(np.linalg.norm(A @ R.T - B, axis=1))), len(A)
+
+
+def wheel_increment(wheels, t0, t1, fog=None, track_width=None):
+    """Planar motion (dx, dy, dyaw) from t0 to t1 (us) in the body frame at t0. Wheel speeds are linearly
+    interpolated at t0 and t1, so short intervals (one LiDAR frame) are not cut at the first/last sample.
+    Heading from the FOG if given, else from the wheel speed difference over track_width."""
+    inside = wheels.t[(wheels.t > t0) & (wheels.t < t1)]
+    tt = np.r_[t0, inside, t1].astype(float)
+    wt = wheels.t.astype(float)
+    vl, vr = np.interp(tt, wt, wheels.v_left), np.interp(tt, wt, wheels.v_right)
+    dt = np.diff(tt) / 1e6
+    if fog is not None:
+        yaw = heading_at(fog, tt)
+        yaw = yaw - yaw[0]
+    else:
+        w = (vl - vr) / track_width
+        yaw = np.r_[0.0, np.cumsum(0.5 * (w[1:] + w[:-1]) * dt)]
+    v = 0.5 * (vl + vr)
+    v_mid, yaw_mid = 0.5 * (v[1:] + v[:-1]), 0.5 * (yaw[1:] + yaw[:-1])
+    return np.sum(v_mid * np.cos(yaw_mid) * dt), np.sum(v_mid * np.sin(yaw_mid) * dt), yaw[-1]

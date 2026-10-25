@@ -1,0 +1,6 @@
+L per-frame sigmas (rx ry rz rad, x y z m): [0.01252 0.00505 0.01215 0.07041 0.0478  0.03783]
+W per-frame sigmas (x m, y m, yaw rad): [0.00757 0.00306 0.00711]; median x residual 0.0203 m (scale bias kept)
+F per-frame yaw sigma: 0.001095 rad
+G 3D-fix sigmas (N E D m): [2.839 2.578 4.58 ] (3155 fixes)
+G 2D-fix sigmas (N E m): [3.384 6.58 ] (1012 fixes)
+I densities: acc 0.00079 m/s^2/sqrt(Hz), gyro 0.000801 rad/s/sqrt(Hz) (at rest, dt 0.020 s)

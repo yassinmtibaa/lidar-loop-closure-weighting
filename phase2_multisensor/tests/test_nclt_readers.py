@@ -123,3 +123,15 @@ def test_factors_build(data):
     assert fw.error(v) < 1e-9
     assert ff.error(v) < 1e-4          # only the loose translation (sigma 1000 m) contributes
     assert fg.error(v) > 0
+
+
+def test_wheel_increment_chains_to_dead_reckoning(data):
+    """Per-interval wheel+FOG increments composed over 60 s match one dead-reckoning pass over the same span."""
+    w, f = data["w"], data["f"]
+    t0 = int(w.t[0]) + 100_000_000
+    grid = np.arange(t0, t0 + 60_000_000, 100_000)
+    T = np.eye(4)
+    for a, b in zip(grid[:-1], grid[1:]):
+        T = T @ sensors.planar_pose(*sensors.wheel_increment(w, a, b, f))
+    z = sensors.planar_pose(*sensors.wheel_increment(w, grid[0], grid[-1], f))
+    assert np.linalg.norm(T[:2, 3] - z[:2, 3]) < 0.02 * max(1.0, np.linalg.norm(z[:2, 3]))

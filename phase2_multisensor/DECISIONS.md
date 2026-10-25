@@ -284,3 +284,83 @@
   one KISS-ICP input run, placeholder noise, in-sample R_LI, and they point in opposite directions (ATE and RPE
   better, KITTI worse). GTSAM is deterministic, so the 3-run rule applies once there are 3 KISS-ICP inputs to compare.
 - preintegrate() now uses zero-order hold over [t0, t1) (the first version skipped the gap before the first sample).
+
+## 2026-10-25: Phase 2.3 on the smoke session (fixed BEFORE any subset run)
+- Yassine said start 2.3. Everything below runs on 2013-01-10 only (development session, not in the split). Tune-
+  session sweeps (2.4) wait for the supercomputer. Nothing here is a headline result: one session, noise estimated
+  on the same session.
+- Inputs: 3 new KISS-ICP runs on 2013-01-10 in the current environment (icp_smoke_r1..r3; the 2026-10-10 smoke run
+  predates the OS upgrade and is not used). GTSAM is deterministic, so the 3 inputs give the noise band.
+- Graph (scripts/subsets_smoke.py): one node per LiDAR frame time, NCLT body frame (x fwd, y right, z down), NED
+  navigation frame. Factors per sensor: L = KISS-ICP per-frame odometry rotated into the body frame with R_LI;
+  I = ImuFactor + bias random walk; W = planar between factor from wheels only (heading from the wheel speed
+  difference, track width 0.6125 m); F = relative-yaw factor; G = GPSFactor at the node nearest the fix (< 50 ms),
+  local NED from the first 3D fix. Always present in every subset: a very weak smoothness factor between consecutive
+  nodes (1 rad, 10 m per frame) so subsets that do not observe some axes stay solvable, and a prior on the first
+  node (identity; roll/pitch from the accelerometer when I is in the subset; yaw and position free when G is in it).
+- Noise: one value per sensor, estimated on 2013-01-10 against ground truth (robust sigma = 1.4826 x MAD of per-frame
+  residuals); IMU densities from the first second at rest; GPS per fix mode. Written to results/noise_2013-01-10.txt
+  and frozen for all subsets. Wheel scale (~8% long) NOT corrected.
+- Metrics: ATE (SE3-aligned), RPE100 and KITTI metric against ground truth body poses at the frame times (metrics.py).
+- Comparison rule (as Phase 1/2.1): "S+x worse than S" only if the 3-run ATE ranges do not overlap (min of S+x > max
+  of S); "better" symmetrically; else within noise.
+- Predictions:
+  - P2.3a: all 31 subsets run end to end with finite poses for all 3 inputs.
+  - P2.3b: subsets without a direct translation source (I, F, I+F) have ATE > 5% of path (57 m): they cannot
+    localize. Reported, not dropped.
+  - P2.3c: adding G never makes a subset worse (non-overlap rule), over the 15 pairs S -> S+G with S non-empty.
+  - P2.3d: adding a sensor is NOT always harmless: at least one of the 75 additions S -> S+x (S non-empty) is worse
+    by the non-overlap rule. (Single fixed noise per sensor, biased wheels: the project hypothesis says this happens.)
+
+## 2026-10-25: Phase 2.3 smoke, facts found AFTER the noise step and BEFORE any subset run
+- The 3 new KISS-ICP smoke runs are bit-identical (ATE 1.926369 m, KITTI 1.874% each, same as 2026-10-10).
+  KISS-ICP is deterministic here; the KISS-SLAM run-to-run noise in 2.1 must come from the SLAM side (closures).
+  So the 3-run noise band on the smoke session is ZERO and the non-overlap rule would count any difference.
+  Rule amended now, before any subset is run: "worse"/"better" needs non-overlapping ranges AND a mean ATE change
+  of more than 5%. P2.3c and P2.3d are judged with the amended rule; the plain non-overlap count is reported too.
+- Noise estimated (results/noise_2013-01-10.txt): L per frame 0.012 rad yaw, 0.07 m x; W 0.0076 m x, 0.0071 rad
+  yaw; F 0.0011 rad yaw; G 3D fixes 2.8 / 2.6 / 4.6 m (N/E/D), 2D fixes 3.4 / 6.6 m; IMU 0.0008 (acc) and
+  0.0008 (gyro) densities at rest.
+- Finding: the LiDAR per-frame error is pose JITTER, not drift: lag-1 autocorrelation of the yaw residual -0.69
+  (x: -0.74); the yaw error summed over 10 frames has the same spread as over 1 frame (0.012 rad), over 50 frames
+  0.018. A white-noise per-frame sigma therefore overstates LiDAR drift by ~10x per second and will underweight
+  LiDAR against FOG and wheels. Kept as registered (one robust per-frame sigma); this is the kind of error the
+  Phase 2.5 covariance prediction has to model (correlated errors, or factors over longer intervals).
+
+## 2026-10-25: Phase 2.3 smoke result (results/subsets_smoke_2013-01-10.csv, subsets_verdicts_2013-01-10.txt)
+- First pass INVALID: LM stopped at 50 iterations far from the optimum on several subsets (e.g. W+F 131 m at 50
+  iterations vs 20.1 m converged from two different starts). Kept as subsets_smoke_2013-01-10_lm50_unconverged.csv.
+  Fix (solver only, noise and predictions unchanged): each step is initialized at the local optimum of that step's
+  L/W/F factors, LM up to 500 iterations, convergence recorded per run.
+- Second pass: all 31 subsets x 3 inputs finite; 16/31 converged. NOT converged in 500 iterations: I, IF, IG, IW, LI,
+  WG, IFG, IWF, IWG, LIF, LIW, WFG, IWFG, LIWF, LIWG (most subsets with the IMU). Their numbers are reported in the CSV
+  but not judged. Every L subset gave identical results on the 3 inputs (KISS-ICP is deterministic here).
+| subset | ATE m | KITTI % | | subset | ATE m | KITTI % |
+|---|---|---|---|---|---|---|
+| L | 1.93 | 1.56 | | LG | 10.62 | 10.10 |
+| W | 112.6 | 75.0 | | LFG | 10.14 | 9.39 |
+| F | 143.3 | 56.2 | | LWG | 10.41 | 31.72 |
+| G | 11.98 | 72.37 | | LWF | 21.28 | 7.60 |
+| LF | 3.70 | 2.07 | | LWFG | 10.07 | 18.49 |
+| LW | 131.6 | 77.3 | | LIG | 9.51 | 5.70 |
+| WF | 20.10 | 7.88 | | LIFG | 9.13 | 4.34 |
+| FG | 11.98 | 12.94 | | LIWFG | 6.70 | 6.37 |
+  (KITTI % here is against ground-truth body poses, so L reads 1.56, not KISS-ICP's 1.87 in its own frame.)
+- P2.3a (all finite): MET. Convergence was not part of P2.3a; 15/31 did not converge, reported above.
+- P2.3b (I, F, I+F cannot localize, ATE > 57 m): MET for all three (143 m each; I and IF did not converge).
+- P2.3c (adding G never worse): NOT MET. Worse on 2 of the 5 decided pairs: L -> LG (1.93 -> 10.62 m) and
+  LF -> LFG (3.70 -> 10.14 m); 10 of 15 pairs undecided (no convergence).
+- P2.3d (some addition worse): MET. 7 of 26 decided additions are worse, 13 better, 6 within (49 undecided).
+  Worse: L+F, L+G, LF+G, L+W, LF+W, W+L, WF+L. The worst: L -> L+W, 1.93 -> 131.6 m.
+- Reading (one session, noise estimated in-sample, one fixed sigma per sensor):
+  - The harm comes from the weights. The per-frame LiDAR sigma is ~10x too pessimistic about drift because its
+    error is jitter (see the entry above), so wheels (biased 8% long, heading from the wheel difference) and FOG take
+    over heading and translation. Adding them to L then replaces a good estimate with a worse one. GPS (2.6-4.6 m
+    sigmas, correlated errors) likewise pulls a 1.9 m-ATE LiDAR trajectory towards its own ~10 m error.
+  - This matches the project hypothesis (fixed weights can make an added sensor harmful) but does not test it:
+    the weights here are miscalibrated in a known direction, not "physically sensible". It motivates 2.5.
+  - W + L worse than W alone (112.6 -> 131.6 m) is not explained yet; not investigated (would be post hoc).
+- Open problems before 2.4: (1) a solver that converges with the IMU (iSAM2, keyframes, or better velocity/bias
+  start); (2) a LiDAR noise model for correlated per-frame error (e.g. factors over 1 s instead of per frame).
+  Both need their own predictions before use. The 2.3 exit criterion "noise band per subset" is only partly met:
+  on the smoke session the band is zero (deterministic inputs); tune sessions need KISS-SLAM inputs or a sweep.

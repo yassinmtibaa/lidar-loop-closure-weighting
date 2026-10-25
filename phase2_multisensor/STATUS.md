@@ -1,7 +1,7 @@
 # Status (update at the end of every session)
 
 **Last update:** 2026-10-25
-**Current phase:** 2.2 done (backbone validated, readers, L+I end to end); next 2.3; 2.1 write-up pending
+**Current phase:** 2.3 started on the smoke session (all sensors in the graph); 2.1 write-up pending
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
 
@@ -22,8 +22,11 @@ written, tune + validation sessions unpacked.
      12 tests pass (tests/). Wheels+FOG dead reckoning 1.08% of path (P2.2d met), wheels-only 9.2x worse (P2.2e met).
 9. DONE 2026-10-25: L+I end to end on the smoke session (scripts/li_smoke.py): runs, P2.2f met; metric changes
    mixed (ATE -15%, KITTI +5.8%) with placeholder noise, not a result. Phase 2.2 exit criteria met.
-10. NEXT (2.3): W, F, G factors in the joint per-frame graph (GPS needs a map-to-NED alignment variable); measure
-   noise per sensor; then the noise band per subset on tune sessions. Full sweeps wait for the supercomputer.
+10. DONE 2026-10-25 (2.3, smoke session only): per-sensor noise estimated; all 31 subsets run (finite), 16/31
+   converge (IMU subsets mostly do not, 500 LM iterations). P2.3a/b/d met, P2.3c not met. Adding W, F or G to L
+   makes it worse because the LiDAR per-frame sigma overstates its drift (jitter). See DECISIONS.
+11. NEXT: (1) a solver that converges with the IMU; (2) LiDAR noise for correlated per-frame error; write
+   predictions first. Then 2.4 on tune sessions (supercomputer). Still pending: Phase 2.1 write-up.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
