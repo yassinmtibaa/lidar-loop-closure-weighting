@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase 2.3 on the smoke session (DECISIONS 2026-10-25): estimate per-sensor noise, then run all 31 sensor subsets
-on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3] [--tilt] [--only=A,B] [jobs]
+on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3 | --v4] [--tilt] [--only=A,B] [jobs]
 Writes results/noise_2013-01-10.txt and results/subsets_smoke_2013-01-10.csv."""
 import csv
 import itertools
@@ -167,6 +167,25 @@ def estimate_noise_v3(t, m, odom, G, gps, bins=5):
     return v3, lines
 
 
+def estimate_noise_v4(t, m, odom, G, gps):
+    """Noise model v4 (DECISIONS 2026-10-26): v3 with IMU densities measured while moving (1 s high-pass)."""
+    v3, lines = estimate_noise_v3(t, m, odom, G, gps)
+    imu, w = m.imu, nclt.read_wheels(S)
+    dt = np.median(np.diff(imu.t)) / 1e6
+    v = 0.5 * (np.interp(imu.t, w.t, w.v_left) + np.interp(imu.t, w.t, w.v_right))
+    mov = (np.abs(v) > 0.5)[100:-100]
+    k = np.ones(50) / 50
+
+    def density(x):
+        hp = np.stack([x[:, i] - np.convolve(x[:, i], k, "same") for i in range(3)], 1)[100:-100]
+        return float(hp[mov].std(0).mean() * np.sqrt(dt))
+
+    v3.acc_density, v3.gyro_density = density(imu.acc), density(imu.gyro)
+    lines += ["noise model v4:", f"IMU densities while moving (1 s high-pass, speed > 0.5 m/s): "
+              f"acc {v3.acc_density:.5f} m/s^2/sqrt(Hz), gyro {v3.gyro_density:.5f} rad/s/sqrt(Hz)"]
+    return v3, lines
+
+
 def run_one(args):
     subset, r = args
     g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None, leveled_wheels=LEVELED)
@@ -184,10 +203,12 @@ def init_worker(m, noise, odom, G, leveled=False):
 
 if __name__ == "__main__":
     t, m, odom, G, gps, R_LI = setup()
-    model = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
+    model = ("v4" if "--v4" in sys.argv else "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv
+             else "v1")
     leveled = "--tilt" in sys.argv          # leveled wheel factor, W subsets only
     suffix = ("" if model == "v1" else f"_{model}") + ("tilt" if leveled else "")
-    noise, lines = {"v1": estimate_noise, "v2": estimate_noise_v2, "v3": estimate_noise_v3}[model](t, m, odom, G, gps)
+    noise, lines = {"v1": estimate_noise, "v2": estimate_noise_v2, "v3": estimate_noise_v3,
+                     "v4": estimate_noise_v4}[model](t, m, odom, G, gps)
     print("\n".join(lines))
     open(os.path.join(OUT, f"noise_{SEQ}{suffix}.txt"), "w").write("\n".join(lines) + "\n")
     if "--noise-only" in sys.argv:

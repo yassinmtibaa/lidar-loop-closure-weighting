@@ -550,3 +550,34 @@
   observe pitch/roll (no IMU), where the leveled factor leaves pitch/roll to the weak smoothness factor and the FOG's
   body-z yaw no longer matches the leveled yaw: a modelling side effect, not evidence about tilt. The body-frame
   wheel factor stays the default. The I+W conflict remains unexplained; next suspects are the IMU noise/bias walk.
+
+## 2026-10-26: IMU noise test = noise model v4 (fixed BEFORE any v4 run)
+- Yassine: yes, test it. Smoke session, same graph, solver (Dogleg + QR) and rule; *_v4 files.
+- v4 = v3 with the IMU white-noise densities taken while MOVING instead of from the first second at rest:
+  std of the 1 s high-pass of each axis on samples with wheel speed > 0.5 m/s (84% of the session), mean over axes,
+  x sqrt(dt). Measured before predicting: acc 0.0116 m/s^2/sqrt(Hz) (v3 0.00079, x15), gyro 0.0125 rad/s/sqrt(Hz)
+  (v3 0.00080, x16). This is an upper bound: the high-pass keeps some real motion (Segway pitch oscillation).
+  Bias random walk unchanged (placeholder).
+- Only the 16 subsets with I are re-run; the other 15 are identical to v3 and copied.
+- Predictions:
+  - P2.4a: L -> L+I is no longer worse (v3: 1.93 -> 3.27 m).
+  - P2.4b: I+W improves on v3 by more than 5% (v3 242.2 m).
+  - P2.4c: fewer than 18 decided additions are worse (v3: 18 of 65).
+
+## 2026-10-26: IMU noise test result (results/*_v4.*) -> P2.4a, P2.4b, P2.4c MET
+- 16 I subsets re-run (user systemd unit, uninterrupted); the 15 others copied from v3. 30/31 converge (not IWG).
+| subset | ATE v3 | ATE v4 | | subset | ATE v3 | ATE v4 |
+|---|---|---|---|---|---|---|
+| L (unchanged) | 1.93 | 1.93 | | IW | 242.2 | 162.0 |
+| LI | 3.27 | 1.18 | | IWF | 220.9 | 140.9 |
+| LIF | 1.81 | 1.26 | | LIW | 22.29 | 18.07 |
+| LIG | 3.51 | 3.55 | | LIWF | 8.67 | 7.85 |
+| LIWFG | 3.39 | 3.35 | | IWFG | 5.55 | 5.02 |
+- P2.4a MET: L -> L+I is now BETTER (1.93 -> 1.18 m, -39%; KITTI in the CSV). First clear gain from adding a sensor
+  to LiDAR on this session.
+- P2.4b MET: I+W 242.2 -> 162.0 m (-33%), but still worse than W alone (110.8 m).
+- P2.4c MET: 16 of 65 decided additions worse (v3: 18); 41 better, 13 within.
+- Reading: the at-rest IMU noise (15x too small while moving) made the IMU overconfident; with moving-noise densities
+  the IMU helps LiDAR. What stays harmful: W (6 worse additions; I+W still worse than either alone), G added to any
+  L subset (4), F added to L or L+I (2). All one session, in-sample noise, single fixed bias walk: not a result yet.
+  Best subset so far: L+I 1.18 m (L alone 1.93 m).

@@ -1,0 +1,88 @@
+P2.3a finite for all 31 x 3: True; converged (< 500 solver iterations): 30/31 -> not converged: IWG
+P2.3b I: ATE 141.7 m (> 57 m: True), converged True
+P2.3b F: ATE 143.3 m (> 57 m: True), converged True
+P2.3b IF: ATE 142.1 m (> 57 m: True), converged True
+adding L  : better 14, within 0, worse 0, undecided 1
+adding I  : better 8, within 2, worse 4, undecided 1
+adding W  : better 2, within 6, worse 6, undecided 1
+adding F  : better 7, within 5, worse 2, undecided 1
+adding G  : better 10, within 0, worse 4, undecided 1
+adding all: better 41, within 13, worse 16, undecided 5
+P2.3c (no addition of G is worse; 15 pairs): worse 4, undecided 1 -> NOT MET
+P2.3d (at least one addition worse; 75 pairs): worse 16 -> MET
+
+G     + F -> FG   : ATE   11.389-  11.389 ->   11.343-  11.343  within
+I     + F -> IF   : ATE  141.673- 141.673 ->  142.150- 142.150  within
+L     + F -> LF   : ATE    1.926-   1.926 ->    2.623-   2.623  worse
+W     + F -> WF   : ATE  110.845- 110.845 ->   12.414-  12.414  better
+IG    + F -> IFG  : ATE   12.114-  12.114 ->   12.023-  12.023  within
+IW    + F -> IWF  : ATE  162.008- 162.008 ->  140.909- 140.909  better
+LG    + F -> LFG  : ATE    3.894-   3.894 ->    4.007-   4.007  within
+LI    + F -> LIF  : ATE    1.182-   1.182 ->    1.256-   1.256  worse
+LW    + F -> LWF  : ATE   18.543-  18.543 ->    9.070-   9.070  better
+WG    + F -> WFG  : ATE   12.625-  12.625 ->   10.988-  10.988  better
+IWG   + F -> IWFG : ATE   17.769-  17.769 ->    5.015-   5.015  undecided
+LIG   + F -> LIFG : ATE    3.547-   3.547 ->    3.291-   3.291  better
+LIW   + F -> LIWF : ATE   18.073-  18.073 ->    7.850-   7.850  better
+LWG   + F -> LWFG : ATE    3.945-   3.945 ->    4.014-   4.014  within
+LIWG  + F -> LIWFG: ATE    3.613-   3.613 ->    3.350-   3.350  better
+F     + G -> FG   : ATE  143.262- 143.262 ->   11.343-  11.343  better
+I     + G -> IG   : ATE  141.673- 141.673 ->   12.114-  12.114  better
+L     + G -> LG   : ATE    1.926-   1.926 ->    3.894-   3.894  worse
+W     + G -> WG   : ATE  110.845- 110.845 ->   12.625-  12.625  better
+IF    + G -> IFG  : ATE  142.150- 142.150 ->   12.023-  12.023  better
+IW    + G -> IWG  : ATE  162.008- 162.008 ->   17.769-  17.769  undecided
+LF    + G -> LFG  : ATE    2.623-   2.623 ->    4.007-   4.007  worse
+LI    + G -> LIG  : ATE    1.182-   1.182 ->    3.547-   3.547  worse
+LW    + G -> LWG  : ATE   18.543-  18.543 ->    3.945-   3.945  better
+WF    + G -> WFG  : ATE   12.414-  12.414 ->   10.988-  10.988  better
+IWF   + G -> IWFG : ATE  140.909- 140.909 ->    5.015-   5.015  better
+LIF   + G -> LIFG : ATE    1.256-   1.256 ->    3.291-   3.291  worse
+LIW   + G -> LIWG : ATE   18.073-  18.073 ->    3.613-   3.613  better
+LWF   + G -> LWFG : ATE    9.070-   9.070 ->    4.014-   4.014  better
+LIWF  + G -> LIWFG: ATE    7.850-   7.850 ->    3.350-   3.350  better
+F     + I -> IF   : ATE  143.262- 143.262 ->  142.150- 142.150  within
+G     + I -> IG   : ATE   11.389-  11.389 ->   12.114-  12.114  worse
+L     + I -> LI   : ATE    1.926-   1.926 ->    1.182-   1.182  better
+W     + I -> IW   : ATE  110.845- 110.845 ->  162.008- 162.008  worse
+FG    + I -> IFG  : ATE   11.343-  11.343 ->   12.023-  12.023  worse
+LF    + I -> LIF  : ATE    2.623-   2.623 ->    1.256-   1.256  better
+LG    + I -> LIG  : ATE    3.894-   3.894 ->    3.547-   3.547  better
+LW    + I -> LIW  : ATE   18.543-  18.543 ->   18.073-  18.073  within
+WF    + I -> IWF  : ATE   12.414-  12.414 ->  140.909- 140.909  worse
+WG    + I -> IWG  : ATE   12.625-  12.625 ->   17.769-  17.769  undecided
+LFG   + I -> LIFG : ATE    4.007-   4.007 ->    3.291-   3.291  better
+LWF   + I -> LIWF : ATE    9.070-   9.070 ->    7.850-   7.850  better
+LWG   + I -> LIWG : ATE    3.945-   3.945 ->    3.613-   3.613  better
+WFG   + I -> IWFG : ATE   10.988-  10.988 ->    5.015-   5.015  better
+LWFG  + I -> LIWFG: ATE    4.014-   4.014 ->    3.350-   3.350  better
+F     + L -> LF   : ATE  143.262- 143.262 ->    2.623-   2.623  better
+G     + L -> LG   : ATE   11.389-  11.389 ->    3.894-   3.894  better
+I     + L -> LI   : ATE  141.673- 141.673 ->    1.182-   1.182  better
+W     + L -> LW   : ATE  110.845- 110.845 ->   18.543-  18.543  better
+FG    + L -> LFG  : ATE   11.343-  11.343 ->    4.007-   4.007  better
+IF    + L -> LIF  : ATE  142.150- 142.150 ->    1.256-   1.256  better
+IG    + L -> LIG  : ATE   12.114-  12.114 ->    3.547-   3.547  better
+IW    + L -> LIW  : ATE  162.008- 162.008 ->   18.073-  18.073  better
+WF    + L -> LWF  : ATE   12.414-  12.414 ->    9.070-   9.070  better
+WG    + L -> LWG  : ATE   12.625-  12.625 ->    3.945-   3.945  better
+IFG   + L -> LIFG : ATE   12.023-  12.023 ->    3.291-   3.291  better
+IWF   + L -> LIWF : ATE  140.909- 140.909 ->    7.850-   7.850  better
+IWG   + L -> LIWG : ATE   17.769-  17.769 ->    3.613-   3.613  undecided
+WFG   + L -> LWFG : ATE   10.988-  10.988 ->    4.014-   4.014  better
+IWFG  + L -> LIWFG: ATE    5.015-   5.015 ->    3.350-   3.350  better
+F     + W -> WF   : ATE  143.262- 143.262 ->   12.414-  12.414  better
+G     + W -> WG   : ATE   11.389-  11.389 ->   12.625-  12.625  worse
+I     + W -> IW   : ATE  141.673- 141.673 ->  162.008- 162.008  worse
+L     + W -> LW   : ATE    1.926-   1.926 ->   18.543-  18.543  worse
+FG    + W -> WFG  : ATE   11.343-  11.343 ->   10.988-  10.988  within
+IF    + W -> IWF  : ATE  142.150- 142.150 ->  140.909- 140.909  within
+IG    + W -> IWG  : ATE   12.114-  12.114 ->   17.769-  17.769  undecided
+LF    + W -> LWF  : ATE    2.623-   2.623 ->    9.070-   9.070  worse
+LG    + W -> LWG  : ATE    3.894-   3.894 ->    3.945-   3.945  within
+LI    + W -> LIW  : ATE    1.182-   1.182 ->   18.073-  18.073  worse
+IFG   + W -> IWFG : ATE   12.023-  12.023 ->    5.015-   5.015  better
+LFG   + W -> LWFG : ATE    4.007-   4.007 ->    4.014-   4.014  within
+LIF   + W -> LIWF : ATE    1.256-   1.256 ->    7.850-   7.850  worse
+LIG   + W -> LIWG : ATE    3.547-   3.547 ->    3.613-   3.613  within
+LIFG  + W -> LIWFG: ATE    3.291-   3.291 ->    3.350-   3.350  within

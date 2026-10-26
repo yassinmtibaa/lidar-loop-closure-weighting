@@ -33,8 +33,10 @@ written, tune + validation sessions unpacked.
    inconclusive (P2.3m), exploratory 2 s smoothing +0.76. Wheel-vs-IMU disagreement is not an axis bug.
 14. DONE 2026-10-26: wheel tilt test: tilt is not the cause (leveled factor changes I+L subsets by < 0.5%; I+W still
    348 m). P2.3n(1) not met, (2)(3) met. Body-frame wheel factor stays.
-15. NEXT: IMU noise / bias walk (placeholders) as the suspect for the I+W conflict; then tune-session runs
-   (supercomputer). Still pending: Phase 2.1 write-up. Long runs: use systemd-run --user (sessions restart).
+15. DONE 2026-10-26: IMU noise test (v4: densities while moving, x15): L+I now better than L (1.18 vs 1.93 m);
+   I+W 242 -> 162 m; 16 worse additions. P2.4a/b/c met. Remaining harm: wheels, GPS on LiDAR, FOG on LiDAR.
+16. NEXT options: wheels (still unexplained: I+W worse than either), tune-session runs of the best noise model
+   (supercomputer), Phase 2.1 write-up (pending). Long runs: systemd-run --user.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
