@@ -524,3 +524,29 @@
 - So the IMU + wheels damage (I+W 242 m) is NOT an axis bug. Remaining suspects, not tested: the IMU noise and bias
   walk are placeholders/at-rest values; the wheel factor is planar in the body frame, but on a pitching Segway the
   wheels measure motion along the ground, not along body x.
+
+## 2026-10-25: wheel tilt test (fixed BEFORE running it)
+- Yassine: do the test. Smoke session, noise model v3, same solver and rule.
+- Input fact (ground truth, checked before predicting): Segway pitch mean -1.2 deg, std 3.5 deg, |pitch| p99 12.3 deg;
+  roll std 1.6 deg.
+- Change: a "leveled" wheel factor (CustomFactor) replaces the body-frame planar one: it compares the wheel
+  increment (dx, dy, dyaw) with the motion between the two nodes expressed in the gravity-level, yaw-only frame of
+  the first node (horizontal displacement and yaw change), so pitch and roll no longer enter. Same per-frame sigmas.
+  Run on the 16 subsets that contain W; *_v3tilt files.
+- Prediction P2.3n: tilt is NOT the cause. With pitch mostly under 4 deg, the body-frame error is about 1 - cos(pitch)
+  (< 0.3% typical, ~2% at 12 deg), so: (1) every W subset changes ATE by less than 10%; (2) I+W stays worse than W
+  alone; (3) L+W stays worse than L.
+
+## 2026-10-26: wheel tilt test result (results/wheel_tilt_test_2013-01-10.txt, subsets_smoke_2013-01-10_v3tilt.csv)
+- Runs were cut off twice by session restarts and once by a reboot; the last two (IW, IWG) ran as a user systemd
+  unit. All 16 W subsets have results; IWG did not converge (500 iterations), as in v3. Rows from the interrupted
+  logs are kept (*_interrupted.log); the CSV has no RPE column for this test.
+- P2.3n(1) NOT MET: 8 of 16 W subsets changed ATE by >= 10% (e.g. WF 12.4 -> 118.6 m, LWF 9.1 -> 34.3 m,
+  LW 18.5 -> 41.4 m, WFG 11.0 -> 7.1 m).
+- P2.3n(2) MET: I+W is still far worse than W alone (348.0 vs 110.8 m; v3 242.2).
+- P2.3n(3) MET: L+W still worse than L (41.4 vs 1.93 m).
+- Reading: tilt is not what makes the wheels harmful. Where the graph knows the tilt (subsets with I and L: LIW,
+  LIWF, LIWG, LIWFG) the leveled factor changes ATE by 0.3-0.4%. The large changes are in subsets that do NOT
+  observe pitch/roll (no IMU), where the leveled factor leaves pitch/roll to the weak smoothness factor and the FOG's
+  body-z yaw no longer matches the leveled yaw: a modelling side effect, not evidence about tilt. The body-frame
+  wheel factor stays the default. The I+W conflict remains unexplained; next suspects are the IMU noise/bias walk.

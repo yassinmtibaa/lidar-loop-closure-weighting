@@ -1,0 +1,7 @@
+subset,run,finite,converged,iterations,solver,ate,rpe100,kitti
+IW,1,True,True,304,dogleg,347.963831,306.056619,162.828906
+IW,2,True,True,304,dogleg,347.963831,306.056619,162.828906
+IW,3,True,True,304,dogleg,347.963831,306.056619,162.828906
+IWG,1,True,False,500,dogleg,19.664070,87.292841,42.446946
+IWG,2,True,False,500,dogleg,19.664070,87.292841,42.446946
+IWG,3,True,False,500,dogleg,19.664070,87.292841,42.446946

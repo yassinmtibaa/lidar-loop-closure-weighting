@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase 2.3 on the smoke session (DECISIONS 2026-10-25): estimate per-sensor noise, then run all 31 sensor subsets
-on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3] [jobs]
+on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3] [--tilt] [--only=A,B] [jobs]
 Writes results/noise_2013-01-10.txt and results/subsets_smoke_2013-01-10.csv."""
 import csv
 import itertools
@@ -169,7 +169,7 @@ def estimate_noise_v3(t, m, odom, G, gps, bins=5):
 
 def run_one(args):
     subset, r = args
-    g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None)
+    g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None, leveled_wheels=LEVELED)
     E, iters, converged, solver = subsets.solve(g, init, keys)
     finite = bool(np.isfinite(E).all())
     ate, rpe, kitti, _ = metrics.compute(GT_POSES, E) if finite else (np.nan,) * 4
@@ -177,15 +177,16 @@ def run_one(args):
                 ate=ate, rpe100=rpe, kitti=kitti)
 
 
-def init_worker(m, noise, odom, G):
-    global M, NOISE, ODOM, GT_POSES
-    M, NOISE, ODOM, GT_POSES = m, noise, odom, G
+def init_worker(m, noise, odom, G, leveled=False):
+    global M, NOISE, ODOM, GT_POSES, LEVELED
+    M, NOISE, ODOM, GT_POSES, LEVELED = m, noise, odom, G, leveled
 
 
 if __name__ == "__main__":
     t, m, odom, G, gps, R_LI = setup()
     model = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
-    suffix = "" if model == "v1" else f"_{model}"
+    leveled = "--tilt" in sys.argv          # leveled wheel factor, W subsets only
+    suffix = ("" if model == "v1" else f"_{model}") + ("tilt" if leveled else "")
     noise, lines = {"v1": estimate_noise, "v2": estimate_noise_v2, "v3": estimate_noise_v3}[model](t, m, odom, G, gps)
     print("\n".join(lines))
     open(os.path.join(OUT, f"noise_{SEQ}{suffix}.txt"), "w").write("\n".join(lines) + "\n")
@@ -193,8 +194,14 @@ if __name__ == "__main__":
         sys.exit()
     jobs = int(sys.argv[-1]) if sys.argv[-1].isdigit() else 6
     combos = ["".join(c) for n in range(1, 6) for c in itertools.combinations(subsets.SENSORS, n)]
+    if leveled:
+        combos = [c for c in combos if "W" in c]
+    only = [a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--only=")]
+    if only:                                # rerun some subsets; results go to a *_part CSV
+        combos = [c for c in combos if c in only[0]]
+        suffix += "_part"
     tasks = [(s, r) for s in combos for r in ((0, 1, 2) if "L" in s else (0,))]
-    with Pool(jobs, init_worker, (m, noise, odom, G)) as pool:
+    with Pool(jobs, init_worker, (m, noise, odom, G, leveled)) as pool:
         rows = []
         for row in pool.imap_unordered(run_one, tasks):
             rows.append(row)

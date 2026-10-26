@@ -1,0 +1,19 @@
+W      v3 ATE  110.845 (conv T) -> leveled  110.824 (conv T)  change    -0.0%
+IW     v3 ATE  242.227 (conv T) -> leveled  347.964 (conv T)  change   +43.7%
+LW     v3 ATE   18.543 (conv T) -> leveled   41.376 (conv T)  change  +123.1%
+WF     v3 ATE   12.414 (conv T) -> leveled  118.607 (conv T)  change  +855.4%
+WG     v3 ATE   12.625 (conv T) -> leveled   11.509 (conv T)  change    -8.8%
+IWF    v3 ATE  220.913 (conv T) -> leveled  172.306 (conv T)  change   -22.0%
+IWG    v3 ATE   20.048 (conv F) -> leveled   19.664 (conv F)  change    -1.9%
+LIW    v3 ATE   22.287 (conv T) -> leveled   22.371 (conv T)  change    +0.4%
+LWF    v3 ATE    9.070 (conv T) -> leveled   34.323 (conv T)  change  +278.4%
+LWG    v3 ATE    3.945 (conv T) -> leveled    6.784 (conv T)  change   +72.0%
+WFG    v3 ATE   10.988 (conv T) -> leveled    7.064 (conv T)  change   -35.7%
+IWFG   v3 ATE    5.549 (conv T) -> leveled    5.137 (conv T)  change    -7.4%
+LIWF   v3 ATE    8.668 (conv T) -> leveled    8.701 (conv T)  change    +0.4%
+LIWG   v3 ATE    3.599 (conv T) -> leveled    3.588 (conv T)  change    -0.3%
+LWFG   v3 ATE    4.014 (conv T) -> leveled    6.478 (conv T)  change   +61.4%
+LIWFG  v3 ATE    3.392 (conv T) -> leveled    3.382 (conv T)  change    -0.3%
+P2.3n(1) every W subset changes < 10%: 8 of 16 changed by >= 10% -> NOT MET
+P2.3n(2) I+W worse than W: 348.0 vs 110.8 -> MET
+P2.3n(3) L+W worse than L: 41.4 vs 1.93 -> MET

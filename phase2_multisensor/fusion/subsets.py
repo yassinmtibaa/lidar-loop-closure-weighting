@@ -113,7 +113,7 @@ def _local_step(factors):
     return gtsam.LevenbergMarquardtOptimizer(g, v, gtsam.LevenbergMarquardtParams()).optimize().atPose3(1).matrix()
 
 
-def build(subset, m, noise, lidar_odom=None):
+def build(subset, m, noise, lidar_odom=None, leveled_wheels=False):
     """Returns (graph, initial values, node keys). subset: string of letters from 'LIWFG'."""
     n = len(m.t)
     graph, init = gtsam.NonlinearFactorGraph(), gtsam.Values()
@@ -165,8 +165,12 @@ def build(subset, m, noise, lidar_odom=None):
     if "W" in subset:
         nw = _wheel_noise(noise, n)
         for k in range(n - 1):
-            graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(planar(*m.wheel[k])),
-                                               nw[k] if isinstance(nw, list) else nw))
+            if leveled_wheels:
+                w = noise.wheel_per_frame[k] if noise.wheel_per_frame is not None else noise.wheel
+                graph.add(leveled_wheel_factor(X(k), X(k + 1), m.wheel[k], w))
+            else:
+                graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(planar(*m.wheel[k])),
+                                                   nw[k] if isinstance(nw, list) else nw))
     if "F" in subset:
         nf = _sig([LOOSE, LOOSE, noise.fog_yaw], [LOOSE] * 3)
         for k in range(n - 1):
@@ -212,3 +216,35 @@ def solve(graph, init, keys, max_iterations=500):
         est = opt.optimize()
     poses = np.array([est.atPose3(k).matrix() for k in keys])
     return poses, opt.iterations(), opt.iterations() < max_iterations, name
+
+
+def leveled_wheel_factor(i, j, inc, sigmas):
+    """Wheel increment (dx, dy, dyaw) compared with the motion i -> j in the gravity-level, yaw-only frame of node i
+    (NED navigation frame), so pitch and roll do not enter. Numerical Jacobians (python CustomFactor)."""
+    inc = np.asarray(inc, float)
+
+    def err(T_i, T_j):
+        yi = T_i.rotation().ypr()[0]
+        yj = T_j.rotation().ypr()[0]
+        d = T_j.translation() - T_i.translation()
+        c, s = np.cos(yi), np.sin(yi)
+        h = np.array([c * d[0] + s * d[1], -s * d[0] + c * d[1]])
+        return np.r_[h - inc[:2], np.angle(np.exp(1j * (yj - yi - inc[2])))]
+
+    def f(this, values, H):
+        T_i, T_j = values.atPose3(this.keys()[0]), values.atPose3(this.keys()[1])
+        e = err(T_i, T_j)
+        if H is not None:
+            eps = 1e-6
+            for n, which in enumerate((0, 1)):
+                J = np.zeros((3, 6))
+                for a in range(6):
+                    dv = np.zeros(6)
+                    dv[a] = eps
+                    Ti = T_i.retract(dv) if which == 0 else T_i
+                    Tj = T_j.retract(dv) if which == 1 else T_j
+                    J[:, a] = (err(Ti, Tj) - e) / eps
+                H[n] = J
+        return e
+
+    return gtsam.CustomFactor(gtsam.noiseModel.Diagonal.Sigmas(np.asarray(sigmas, float)), [i, j], f)

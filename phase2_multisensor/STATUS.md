@@ -31,8 +31,10 @@ written, tune + validation sessions unpacked.
    (L+G 7.8 -> 3.9 m) but 18 additions still worse; P2.5a/b/c not met.
 13. DONE 2026-10-25: IMU axis check: axes are as assumed (gyro correlations +0.95/+0.99/+1.00); acc_x test
    inconclusive (P2.3m), exploratory 2 s smoothing +0.76. Wheel-vs-IMU disagreement is not an axis bug.
-14. NEXT candidates: wheel factor on a pitching Segway (wheels measure along the ground), IMU noise/bias walk;
-   then tune-session runs (supercomputer). Still pending: Phase 2.1 write-up.
+14. DONE 2026-10-26: wheel tilt test: tilt is not the cause (leveled factor changes I+L subsets by < 0.5%; I+W still
+   348 m). P2.3n(1) not met, (2)(3) met. Body-frame wheel factor stays.
+15. NEXT: IMU noise / bias walk (placeholders) as the suspect for the I+W conflict; then tune-session runs
+   (supercomputer). Still pending: Phase 2.1 write-up. Long runs: use systemd-run --user (sessions restart).
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
