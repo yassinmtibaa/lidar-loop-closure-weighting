@@ -581,3 +581,41 @@
   the IMU helps LiDAR. What stays harmful: W (6 worse additions; I+W still worse than either alone), G added to any
   L subset (4), F added to L or L+I (2). All one session, in-sample noise, single fixed bias walk: not a result yet.
   Best subset so far: L+I 1.18 m (L alone 1.93 m).
+
+## 2026-10-27: wheel diagnosis (step 1 of 3 agreed with Yassine: wheels, tune-session prep, 2.1 write-up)
+- Found before any new run (smoke session, per-frame wheel increments vs ground truth):
+  - The wheel-derived heading has a large systematic drift: summed over the session it turns +20.3 rad while ground
+    truth turns -1.48 rad (FOG -1.46). That is a constant yaw-rate bias, as from unequal left/right wheel radii.
+  - Turns are under-read: median wheel/ground-truth yaw ratio while turning 0.85 (v1), and 0.79 since v2, because
+    the v2 wheel scale (0.925, meant for distance) was also applied to the heading. That was a mistake in v2-v4.
+  - The noise estimate subtracts the median residual (robust sigma), so this bias never entered the W sigma: the
+    W factor was confident about a biased heading. This explains why adding W hurts and why I+W is worse than either
+    alone (the IMU and the wheels disagree on heading by a drift the wheel noise says cannot exist).
+- Fix = noise model v5 (v4 plus): per-wheel calibration, fitted on 2013-01-10 against ground truth (in-sample, as
+  the v2 scale): s_left, s_right (speed scales) and track width b, by least squares on per-frame distance and yaw
+  (frames moving > 0.2 m). The calibrated wheels replace the v2 scale; W noise is then re-estimated as in v3.
+- Predictions (v5 vs v4, smoke session, same graph/solver/rule; all 31 subsets re-run):
+  - P2.6a: W alone ATE drops below 50 m (v4 110.8 m).
+  - P2.6b: I+W is no longer worse than W alone.
+  - P2.6c: L -> L+W is no longer worse (v4: 1.93 -> 18.5 m).
+  - P2.6d: fewer than 10 decided additions are worse (v4: 16 of 65).
+
+## 2026-10-27: wheel calibration result (noise model v5, results/*_v5.*) -> P2.6a MET; P2.6b, c, d NOT MET
+- Calibration (noise_2013-01-10_v5.txt): s_left 0.9195, s_right 0.9294, track width 0.5553 m (was 0.6125 fitted
+  against FOG without a bias term). Session heading from wheels: -1.12 rad (ground truth -1.48; before +20.3).
+- All 31 subsets converge (first time). Selected ATE (m), v4 -> v5:
+  W 110.8 -> 24.95; WF 12.4 -> 1.85; LW 18.5 -> 2.55; LIW 18.1 -> 1.95; LWF 9.07 -> 2.64; LIWF 7.85 -> 1.31;
+  IWG 17.8 -> 5.24; IW 162.0 -> 126.8; IWF 140.9 -> 126.2. L 1.93, LI 1.18 unchanged.
+- P2.6a MET: W alone 24.95 m (< 50 m).
+- P2.6b NOT MET: I+W 126.8 m, still far worse than W alone (24.95 m). Likewise WF -> IWF 1.85 -> 126.2 m.
+- P2.6c NOT MET: L -> L+W 1.93 -> 2.55 m (+33%), much smaller harm than before (18.5 m).
+- P2.6d NOT MET: 18 of 75 additions worse (all decided now; v4 16 of 65 decided).
+- Reading:
+  - The wheel heading bias was the main wheel problem: every wheel subset with L or F improved 4-10x. Wheels + FOG
+    alone reaches 1.85 m, slightly better than LiDAR alone (1.93 m). In-sample calibration, one session.
+  - GPS is now the most common harm: adding G is worse in 9 of 15 pairs. The good subsets sit at 1.2-2.6 m and GPS
+    (2.6-4.6 m sigma before inflation, correlated) pulls them to 3.3-4.0 m. The x7.1 inflation is not enough.
+  - The IMU harms subsets WITHOUT LiDAR (I+W 127 m, IWF 126 m) but helps with LiDAR (L+I 1.18 m). Without LiDAR the
+    IMU's velocity and attitude are only tied to wheels' planar increments; a remaining IMU modelling problem (bias
+    walk placeholder, zero-velocity prior only at the start). Not investigated.
+- Step 1 (wheels) stops here as agreed; next is step 2 (tune-session preparation).

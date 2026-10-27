@@ -1,0 +1,88 @@
+P2.3a finite for all 31 x 3: True; converged (< 500 solver iterations): 31/31 -> not converged: 
+P2.3b I: ATE 141.7 m (> 57 m: True), converged True
+P2.3b F: ATE 143.3 m (> 57 m: True), converged True
+P2.3b IF: ATE 142.1 m (> 57 m: True), converged True
+adding L  : better 14, within 0, worse 1, undecided 0
+adding I  : better 10, within 1, worse 4, undecided 0
+adding W  : better 5, within 8, worse 2, undecided 0
+adding F  : better 5, within 8, worse 2, undecided 0
+adding G  : better 6, within 0, worse 9, undecided 0
+adding all: better 40, within 17, worse 18, undecided 0
+P2.3c (no addition of G is worse; 15 pairs): worse 9, undecided 0 -> NOT MET
+P2.3d (at least one addition worse; 75 pairs): worse 18 -> MET
+
+G     + F -> FG   : ATE   11.389-  11.389 ->   11.343-  11.343  within
+I     + F -> IF   : ATE  141.673- 141.673 ->  142.150- 142.150  within
+L     + F -> LF   : ATE    1.926-   1.926 ->    2.623-   2.623  worse
+W     + F -> WF   : ATE   24.951-  24.951 ->    1.852-   1.852  better
+IG    + F -> IFG  : ATE   12.114-  12.114 ->   12.023-  12.023  within
+IW    + F -> IWF  : ATE  126.769- 126.769 ->  126.188- 126.188  within
+LG    + F -> LFG  : ATE    3.894-   3.894 ->    4.007-   4.007  within
+LI    + F -> LIF  : ATE    1.182-   1.182 ->    1.256-   1.256  worse
+LW    + F -> LWF  : ATE    2.554-   2.554 ->    2.643-   2.643  within
+WG    + F -> WFG  : ATE   11.191-  11.191 ->   11.160-  11.160  within
+IWG   + F -> IWFG : ATE    5.235-   5.235 ->    4.391-   4.391  better
+LIG   + F -> LIFG : ATE    3.547-   3.547 ->    3.291-   3.291  better
+LIW   + F -> LIWF : ATE    1.945-   1.945 ->    1.313-   1.313  better
+LWG   + F -> LWFG : ATE    3.941-   3.941 ->    4.026-   4.026  within
+LIWG  + F -> LIWFG: ATE    3.546-   3.546 ->    3.285-   3.285  better
+F     + G -> FG   : ATE  143.262- 143.262 ->   11.343-  11.343  better
+I     + G -> IG   : ATE  141.673- 141.673 ->   12.114-  12.114  better
+L     + G -> LG   : ATE    1.926-   1.926 ->    3.894-   3.894  worse
+W     + G -> WG   : ATE   24.951-  24.951 ->   11.191-  11.191  better
+IF    + G -> IFG  : ATE  142.150- 142.150 ->   12.023-  12.023  better
+IW    + G -> IWG  : ATE  126.769- 126.769 ->    5.235-   5.235  better
+LF    + G -> LFG  : ATE    2.623-   2.623 ->    4.007-   4.007  worse
+LI    + G -> LIG  : ATE    1.182-   1.182 ->    3.547-   3.547  worse
+LW    + G -> LWG  : ATE    2.554-   2.554 ->    3.941-   3.941  worse
+WF    + G -> WFG  : ATE    1.852-   1.852 ->   11.160-  11.160  worse
+IWF   + G -> IWFG : ATE  126.188- 126.188 ->    4.391-   4.391  better
+LIF   + G -> LIFG : ATE    1.256-   1.256 ->    3.291-   3.291  worse
+LIW   + G -> LIWG : ATE    1.945-   1.945 ->    3.546-   3.546  worse
+LWF   + G -> LWFG : ATE    2.643-   2.643 ->    4.026-   4.026  worse
+LIWF  + G -> LIWFG: ATE    1.313-   1.313 ->    3.285-   3.285  worse
+F     + I -> IF   : ATE  143.262- 143.262 ->  142.150- 142.150  within
+G     + I -> IG   : ATE   11.389-  11.389 ->   12.114-  12.114  worse
+L     + I -> LI   : ATE    1.926-   1.926 ->    1.182-   1.182  better
+W     + I -> IW   : ATE   24.951-  24.951 ->  126.769- 126.769  worse
+FG    + I -> IFG  : ATE   11.343-  11.343 ->   12.023-  12.023  worse
+LF    + I -> LIF  : ATE    2.623-   2.623 ->    1.256-   1.256  better
+LG    + I -> LIG  : ATE    3.894-   3.894 ->    3.547-   3.547  better
+LW    + I -> LIW  : ATE    2.554-   2.554 ->    1.945-   1.945  better
+WF    + I -> IWF  : ATE    1.852-   1.852 ->  126.188- 126.188  worse
+WG    + I -> IWG  : ATE   11.191-  11.191 ->    5.235-   5.235  better
+LFG   + I -> LIFG : ATE    4.007-   4.007 ->    3.291-   3.291  better
+LWF   + I -> LIWF : ATE    2.643-   2.643 ->    1.313-   1.313  better
+LWG   + I -> LIWG : ATE    3.941-   3.941 ->    3.546-   3.546  better
+WFG   + I -> IWFG : ATE   11.160-  11.160 ->    4.391-   4.391  better
+LWFG  + I -> LIWFG: ATE    4.026-   4.026 ->    3.285-   3.285  better
+F     + L -> LF   : ATE  143.262- 143.262 ->    2.623-   2.623  better
+G     + L -> LG   : ATE   11.389-  11.389 ->    3.894-   3.894  better
+I     + L -> LI   : ATE  141.673- 141.673 ->    1.182-   1.182  better
+W     + L -> LW   : ATE   24.951-  24.951 ->    2.554-   2.554  better
+FG    + L -> LFG  : ATE   11.343-  11.343 ->    4.007-   4.007  better
+IF    + L -> LIF  : ATE  142.150- 142.150 ->    1.256-   1.256  better
+IG    + L -> LIG  : ATE   12.114-  12.114 ->    3.547-   3.547  better
+IW    + L -> LIW  : ATE  126.769- 126.769 ->    1.945-   1.945  better
+WF    + L -> LWF  : ATE    1.852-   1.852 ->    2.643-   2.643  worse
+WG    + L -> LWG  : ATE   11.191-  11.191 ->    3.941-   3.941  better
+IFG   + L -> LIFG : ATE   12.023-  12.023 ->    3.291-   3.291  better
+IWF   + L -> LIWF : ATE  126.188- 126.188 ->    1.313-   1.313  better
+IWG   + L -> LIWG : ATE    5.235-   5.235 ->    3.546-   3.546  better
+WFG   + L -> LWFG : ATE   11.160-  11.160 ->    4.026-   4.026  better
+IWFG  + L -> LIWFG: ATE    4.391-   4.391 ->    3.285-   3.285  better
+F     + W -> WF   : ATE  143.262- 143.262 ->    1.852-   1.852  better
+G     + W -> WG   : ATE   11.389-  11.389 ->   11.191-  11.191  within
+I     + W -> IW   : ATE  141.673- 141.673 ->  126.769- 126.769  better
+L     + W -> LW   : ATE    1.926-   1.926 ->    2.554-   2.554  worse
+FG    + W -> WFG  : ATE   11.343-  11.343 ->   11.160-  11.160  within
+IF    + W -> IWF  : ATE  142.150- 142.150 ->  126.188- 126.188  better
+IG    + W -> IWG  : ATE   12.114-  12.114 ->    5.235-   5.235  better
+LF    + W -> LWF  : ATE    2.623-   2.623 ->    2.643-   2.643  within
+LG    + W -> LWG  : ATE    3.894-   3.894 ->    3.941-   3.941  within
+LI    + W -> LIW  : ATE    1.182-   1.182 ->    1.945-   1.945  worse
+IFG   + W -> IWFG : ATE   12.023-  12.023 ->    4.391-   4.391  better
+LFG   + W -> LWFG : ATE    4.007-   4.007 ->    4.026-   4.026  within
+LIF   + W -> LIWF : ATE    1.256-   1.256 ->    1.313-   1.313  within
+LIG   + W -> LIWG : ATE    3.547-   3.547 ->    3.546-   3.546  within
+LIFG  + W -> LIWFG: ATE    3.291-   3.291 ->    3.285-   3.285  within

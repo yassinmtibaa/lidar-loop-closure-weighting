@@ -35,8 +35,10 @@ written, tune + validation sessions unpacked.
    348 m). P2.3n(1) not met, (2)(3) met. Body-frame wheel factor stays.
 15. DONE 2026-10-26: IMU noise test (v4: densities while moving, x15): L+I now better than L (1.18 vs 1.93 m);
    I+W 242 -> 162 m; 16 worse additions. P2.4a/b/c met. Remaining harm: wheels, GPS on LiDAR, FOG on LiDAR.
-16. NEXT options: wheels (still unexplained: I+W worse than either), tune-session runs of the best noise model
-   (supercomputer), Phase 2.1 write-up (pending). Long runs: systemd-run --user.
+16. DONE 2026-10-27: wheel calibration (v5: per-wheel scales + track width): wheel heading bias was the wheel
+   problem (W 111 -> 25 m, LW 18.5 -> 2.55 m, WF 1.85 m). All 31 converge. Remaining harm: GPS (9 of 15
+   additions worse), IMU without LiDAR (I+W 127 m). P2.6a met, b/c/d not met.
+17. NEXT (agreed order): step 2 = prepare tune-session runs (supercomputer); step 3 = Phase 2.1 write-up.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember

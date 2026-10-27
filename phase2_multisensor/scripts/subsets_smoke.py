@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase 2.3 on the smoke session (DECISIONS 2026-10-25): estimate per-sensor noise, then run all 31 sensor subsets
-on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3 | --v4] [--tilt] [--only=A,B] [jobs]
+on each of the 3 KISS-ICP inputs. usage: .venv/bin/python scripts/subsets_smoke.py [--noise-only] [--v2 | --v3 | --v4 | --v5] [--tilt] [--only=A,B] [jobs]
 Writes results/noise_2013-01-10.txt and results/subsets_smoke_2013-01-10.csv."""
 import csv
 import itertools
@@ -83,7 +83,29 @@ def compose(steps):
     return T
 
 
-def estimate_noise_v2(t, m, odom, G, gps, window=50):
+def calibrate_wheels(t, m, G):
+    """Per-wheel calibration (DECISIONS 2026-10-27): speed scales s_left, s_right and track width b, least squares on
+    per-frame distance and yaw against ground truth (frames moving > 0.2 m). Replaces m.wheel."""
+    from scipy.optimize import least_squares
+    rel = np.array([np.linalg.inv(G[k]) @ G[k + 1] for k in range(len(G) - 1)])
+    gyaw = np.arctan2(rel[:, 1, 0], rel[:, 0, 0])
+    d = np.linalg.norm(rel[:, :2, 3], axis=1)
+    w = nclt.read_wheels(S)
+    wt = w.t.astype(float)
+    L, R = np.zeros(len(t) - 1), np.zeros(len(t) - 1)
+    for k in range(len(t) - 1):
+        tt = np.r_[t[k], w.t[(w.t > t[k]) & (w.t < t[k + 1])], t[k + 1]].astype(float)
+        vl, vr, dt = np.interp(tt, wt, w.v_left), np.interp(tt, wt, w.v_right), np.diff(tt) / 1e6
+        L[k], R[k] = np.sum(0.5 * (vl[1:] + vl[:-1]) * dt), np.sum(0.5 * (vr[1:] + vr[:-1]) * dt)
+    mv = np.r_[d > 0.2, d > 0.2]
+    res = lambda p: np.r_[(p[0] * L + p[1] * R) / 2 - d, (p[0] * L - p[1] * R) / p[2] - gyaw][mv]
+    sl, sr, b = least_squares(res, [1.0, 1.0, TRACK_WIDTH]).x
+    cal = nclt.Wheels(w.t, w.v_left * sl, w.v_right * sr)
+    m.wheel = np.array([sensors.wheel_increment(cal, t[k], t[k + 1], None, b) for k in range(len(t) - 1)])
+    return sl, sr, b
+
+
+def estimate_noise_v2(t, m, odom, G, gps, window=50, wheel_cal=False):
     """Noise model v2 (DECISIONS 2026-10-25): wheel scale, then drift-equivalent sigmas for L, W, F
     (robust sigma of residuals over non-overlapping `window`-frame spans, divided by sqrt(window))."""
     base, _ = estimate_noise(t, m, odom, G, gps)
@@ -91,8 +113,12 @@ def estimate_noise_v2(t, m, odom, G, gps, window=50):
     d_gt = np.linalg.norm(rel[:, :2, 3], axis=1)
     d_w = np.hypot(m.wheel[:, 0], m.wheel[:, 1])
     moving = d_gt > 0.2
-    scale = float(np.median(d_gt[moving] / d_w[moving]))
-    m.wheel = m.wheel * scale
+    if wheel_cal:
+        cal = calibrate_wheels(t, m, G)
+        scale = None
+    else:
+        scale = float(np.median(d_gt[moving] / d_w[moving]))
+        m.wheel = m.wheel * scale
     spans = [(a, a + window) for a in range(0, len(rel) - window + 1, window)]
     gt_w = [compose(rel[a:b]) for a, b in spans]
     lr = np.array([gtsam.Pose3.Logmap(gtsam.Pose3(np.linalg.inv(g) @ compose(o[a:b])))
@@ -108,7 +134,8 @@ def estimate_noise_v2(t, m, odom, G, gps, window=50):
     fog = float(robust(np.angle(np.exp(1j * fr)))) / np.sqrt(window)
     noise = subsets.Noise(lidar, wheel, fog, base.gps3, base.gps2, base.acc_density, base.gyro_density)
     lines = [f"noise model v2: {len(spans)} windows of {window} frames, sigma = robust(window residual)/sqrt({window})",
-             f"wheel scale s = {scale:.4f} (median ground-truth / wheel distance, frames moving > 0.2 m)",
+             (f"wheel scale s = {scale:.4f} (median ground-truth / wheel distance, frames moving > 0.2 m)" if scale
+              else "wheel calibration: s_left {:.4f}, s_right {:.4f}, track width {:.4f} m".format(*cal)),
              f"L drift-equivalent per-frame sigmas (rx ry rz rad, x y z m): {np.array2string(lidar, precision=5)}",
              f"W drift-equivalent per-frame sigmas (x m, y m, yaw rad), scaled wheels: {np.array2string(wheel, precision=5)}",
              f"F drift-equivalent per-frame yaw sigma: {fog:.6f} rad",
@@ -117,10 +144,10 @@ def estimate_noise_v2(t, m, odom, G, gps, window=50):
     return noise, lines
 
 
-def estimate_noise_v3(t, m, odom, G, gps, bins=5):
+def estimate_noise_v3(t, m, odom, G, gps, bins=5, wheel_cal=False):
     """Noise model v3 (DECISIONS 2026-10-25): v2 plus per-frame wheel sigmas growing with the wheel-derived turn,
     and GPS sigmas inflated for correlated fixes."""
-    v2, lines = estimate_noise_v2(t, m, odom, G, gps)          # also applies the wheel scale to m.wheel
+    v2, lines = estimate_noise_v2(t, m, odom, G, gps, wheel_cal=wheel_cal)   # also scales/calibrates m.wheel
     rel = np.array([np.linalg.inv(G[k]) @ G[k + 1] for k in range(len(G) - 1)])
     gyaw = np.arctan2(rel[:, 1, 0], rel[:, 0, 0])
     r = m.wheel - np.c_[rel[:, 0, 3], rel[:, 1, 3], gyaw]
@@ -167,9 +194,10 @@ def estimate_noise_v3(t, m, odom, G, gps, bins=5):
     return v3, lines
 
 
-def estimate_noise_v4(t, m, odom, G, gps):
-    """Noise model v4 (DECISIONS 2026-10-26): v3 with IMU densities measured while moving (1 s high-pass)."""
-    v3, lines = estimate_noise_v3(t, m, odom, G, gps)
+def estimate_noise_v4(t, m, odom, G, gps, wheel_cal=False):
+    """Noise model v4 (DECISIONS 2026-10-26): v3 with IMU densities measured while moving (1 s high-pass).
+    wheel_cal=True gives v5 (per-wheel calibration instead of one distance scale, DECISIONS 2026-10-27)."""
+    v3, lines = estimate_noise_v3(t, m, odom, G, gps, wheel_cal=wheel_cal)
     imu, w = m.imu, nclt.read_wheels(S)
     dt = np.median(np.diff(imu.t)) / 1e6
     v = 0.5 * (np.interp(imu.t, w.t, w.v_left) + np.interp(imu.t, w.t, w.v_right))
@@ -203,12 +231,13 @@ def init_worker(m, noise, odom, G, leveled=False):
 
 if __name__ == "__main__":
     t, m, odom, G, gps, R_LI = setup()
-    model = ("v4" if "--v4" in sys.argv else "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv
+    model = ("v5" if "--v5" in sys.argv else "v4" if "--v4" in sys.argv else "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv
              else "v1")
     leveled = "--tilt" in sys.argv          # leveled wheel factor, W subsets only
     suffix = ("" if model == "v1" else f"_{model}") + ("tilt" if leveled else "")
     noise, lines = {"v1": estimate_noise, "v2": estimate_noise_v2, "v3": estimate_noise_v3,
-                     "v4": estimate_noise_v4}[model](t, m, odom, G, gps)
+                     "v4": estimate_noise_v4,
+                     "v5": lambda *a: estimate_noise_v4(*a, wheel_cal=True)}[model](t, m, odom, G, gps)
     print("\n".join(lines))
     open(os.path.join(OUT, f"noise_{SEQ}{suffix}.txt"), "w").write("\n".join(lines) + "\n")
     if "--noise-only" in sys.argv:
