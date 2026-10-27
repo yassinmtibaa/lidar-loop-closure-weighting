@@ -155,9 +155,10 @@ def build(subset, m, noise, lidar_odom=None, leveled_wheels=False):
         graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(traj[0]), _sig([rp, rp, LOOSE], [100.0] * 3)))   # position free (100 m) when G anchors it
     else:
         graph.add(gtsam.PriorFactorPose3(X(0), gtsam.Pose3(T0), _sig([rp, rp, TIGHT], [TIGHT] * 3)))
-    reg = _sig([REG_SIGMA[0]] * 3, [REG_SIGMA[1]] * 3)
-    for k in range(n - 1):
-        graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(), reg))
+    if "L" not in subset and "I" not in subset:     # L and I observe all 6 axes; the weak smoothness factor is
+        reg = _sig([REG_SIGMA[0]] * 3, [REG_SIGMA[1]] * 3)   # only needed (and only harmless) without them
+        for k in range(n - 1):
+            graph.add(gtsam.BetweenFactorPose3(X(k), X(k + 1), gtsam.Pose3(), reg))
     if "L" in subset:
         nl = gtsam.noiseModel.Diagonal.Sigmas(noise.lidar)
         for k in range(n - 1):
@@ -197,7 +198,7 @@ def build(subset, m, noise, lidar_odom=None, leveled_wheels=False):
     return graph, init, [X(k) for k in range(n)]
 
 
-def solve(graph, init, keys, max_iterations=500):
+def solve(graph, init, keys, max_iterations=500, return_values=False):
     """Dogleg with a QR linear solver, falling back to LM (QR) if it throws; returns (poses, iterations, converged,
     solver name). Cholesky failed or stalled on IMU subsets (DECISIONS 2026-10-25)."""
     try:
@@ -215,7 +216,65 @@ def solve(graph, init, keys, max_iterations=500):
         opt, name = gtsam.LevenbergMarquardtOptimizer(graph, init, p), "lm"
         est = opt.optimize()
     poses = np.array([est.atPose3(k).matrix() for k in keys])
-    return poses, opt.iterations(), opt.iterations() < max_iterations, name
+    out = poses, opt.iterations(), opt.iterations() < max_iterations, name
+    return out + (est,) if return_values else out
+
+
+def _key_dim(values, k):
+    for get, d in ((values.atPose3, 6), (values.atVector, 3)):
+        try:
+            get(k)
+            return d
+        except RuntimeError:
+            pass
+    return 6                                   # imuBias.ConstantBias
+
+
+def translation_covariances(graph, est, wanted):
+    """Translation blocks of the Pose3 marginals at `wanted` keys, from the sparse Gauss-Newton Hessian J^T J at the
+    estimate (LU solve). Same numbers as gtsam.Marginals where that works (checked), but it also works where
+    Marginals' Cholesky reports an indeterminate system (IMU subsets, loose axes)."""
+    import scipy.sparse as sp
+    import scipy.sparse.linalg as sla
+    gfg = graph.linearize(est)
+    T = gfg.sparseJacobian_()
+    i, j, v = T[0].astype(int) - 1, T[1].astype(int) - 1, T[2]
+    off, n = {}, 0
+    for k in sorted(gfg.keys()):               # sparseJacobian_ orders columns by sorted key
+        off[k] = n
+        n += _key_dim(est, k)
+    keep = j < n                               # last column is the right-hand side
+    J = sp.csc_matrix((v[keep], (i[keep], j[keep])), shape=(int(i.max()) + 1, n))
+    lu = sla.splu((J.T @ J).tocsc())
+    out = []
+    for k in wanted:
+        rhs = np.zeros((n, 3))
+        rhs[off[k] + 3 + np.arange(3), np.arange(3)] = 1.0
+        out.append(lu.solve(rhs)[off[k] + 3:off[k] + 6])
+    return out
+
+
+def position_nees(graph, est, keys, G, every=50, absolute=False):
+    """Position NEES at every `every`-th node: e^T S^-1 e with e the ground-truth minus estimated position in the
+    estimate's body frame and S the translation block of the Pose3 marginal (GTSAM tangent order rot, trans).
+    Frame: without GPS the graph is anchored at node 0, so ground truth is moved to put its first pose on the
+    estimate's first pose; with GPS (absolute=True) ground truth is shifted by the mean position offset only.
+    Returns (mean NEES, fraction under the 95% chi-square bound for 3 dof (7.815), number of nodes); a consistent
+    estimator has mean NEES ~3 and ~95% under the bound."""
+    E = np.array([est.atPose3(k).matrix() for k in keys])
+    if absolute:
+        Ga = G.copy()
+        Ga[:, :3, 3] += (E[:, :3, 3] - G[:, :3, 3]).mean(0)
+    else:
+        Ga = E[0] @ np.linalg.inv(G[0]) @ G
+    idx = list(range(0, len(keys), every))
+    try:
+        covs = translation_covariances(graph, est, [keys[i] for i in idx])
+    except RuntimeError:
+        return float("nan"), float("nan"), 0
+    vals = np.array([float(e @ np.linalg.solve(S, e)) for S, e in
+                     ((S, E[i][:3, :3].T @ (Ga[i][:3, 3] - E[i][:3, 3])) for S, i in zip(covs, idx))])
+    return float(vals.mean()), float((vals < 7.815).mean()), len(vals)
 
 
 def leveled_wheel_factor(i, j, inc, sigmas):

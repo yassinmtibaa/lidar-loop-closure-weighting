@@ -42,7 +42,9 @@ written, tune + validation sessions unpacked.
    run_tune.sh, scripts/subsets_run.py); protocol and predictions T1-T5 registered. Not run yet.
 18. DONE 2026-10-27: step 3, Phase 2.1 written up in docs/report/report.tex (section 7 "Replication on NCLT",
    abstract, limitations, conclusion; g2o half-angle note). report.pdf rebuilt (7 pages).
-19. NEXT: launch supercomputer/run_tune.sh when access arrives (predictions T1-T5 already registered).
+19. DONE 2026-10-27: kit completed: position NEES, three weightings (predicted/fixed/identity), smoothness factor only
+   without L and I, 2D-GPS fallback rule; local dry run on 2012-04-29 passed (results/dryrun_*). T6, T7 registered.
+20. NEXT: launch supercomputer/run_tune.sh when access arrives (predictions T1-T7 registered, not to be changed).
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember

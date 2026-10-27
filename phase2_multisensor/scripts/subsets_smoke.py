@@ -59,6 +59,8 @@ def estimate_noise(t, m, odom, G, gps):
     e = ned + off - gp
     gps3 = robust(e[mode == 3])
     gps2 = robust(e[mode == 2][:, :2])
+    if (mode == 2).sum() < 100:            # too few 2D fixes for a sigma (2012-04-29 has 14): use the 3D-fix values
+        gps2 = gps3[:2].copy()
     # I: white-noise densities from the first second at rest
     imu = m.imu
     rest = imu.t < imu.t[0] + 1_000_000
@@ -228,16 +230,20 @@ def estimate_noise_v4(t, m, odom, G, gps, wheel_cal=False):
 def run_one(args):
     subset, r = args
     g, init, keys = subsets.build(subset, M, NOISE, ODOM[r] if "L" in subset else None, leveled_wheels=LEVELED)
-    E, iters, converged, solver = subsets.solve(g, init, keys)
+    E, iters, converged, solver, est = subsets.solve(g, init, keys, return_values=True)
     finite = bool(np.isfinite(E).all())
     ate, rpe, kitti, _ = metrics.compute(GT_POSES, E) if finite else (np.nan,) * 4
-    return dict(subset=subset, run=r + 1, finite=finite, converged=converged, iterations=iters, solver=solver,
-                ate=ate, rpe100=rpe, kitti=kitti)
+    row = dict(subset=subset, run=r + 1, finite=finite, converged=converged, iterations=iters, solver=solver,
+               ate=ate, rpe100=rpe, kitti=kitti)
+    if NEES_EVERY and finite:
+        row["nees_mean"], row["nees_in95"], row["nees_n"] = subsets.position_nees(
+            g, est, keys, GT_POSES, NEES_EVERY, absolute="G" in subset)
+    return row
 
 
-def init_worker(m, noise, odom, G, leveled=False):
-    global M, NOISE, ODOM, GT_POSES, LEVELED
-    M, NOISE, ODOM, GT_POSES, LEVELED = m, noise, odom, G, leveled
+def init_worker(m, noise, odom, G, leveled=False, nees_every=0):
+    global M, NOISE, ODOM, GT_POSES, LEVELED, NEES_EVERY
+    M, NOISE, ODOM, GT_POSES, LEVELED, NEES_EVERY = m, noise, odom, G, leveled, nees_every
 
 
 if __name__ == "__main__":

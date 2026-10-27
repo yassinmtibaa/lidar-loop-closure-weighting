@@ -1,7 +1,8 @@
 # Running Phase 2.4 on the supercomputer
 
-What it does: the 31-subset sensor sweep (noise model v5) on the three TUNE sessions, 3 KISS-ICP inputs each,
-with each session's noise fitted on the other two (leave-one-out). Protocol and predictions: `../DECISIONS.md`,
+What it does: the 31-subset sensor sweep on the three TUNE sessions, 3 KISS-ICP inputs each, under three weightings
+(predicted = noise model v5, fixed = one sigma per sensor, identity), with position NEES every 50 frames. Each
+session's noise is fitted on the other two (leave-one-out). Protocol and predictions: `../DECISIONS.md`,
 entry "2026-10-27: 2.4 tune-session protocol". Validation and test sessions are not touched.
 
 ## 1. Environment
@@ -21,8 +22,15 @@ Smoke session 2013-01-10 too if you want the tests.
 JOBS=32 supercomputer/run_tune.sh          # or one step: icp | noise | sweep
 ```
 Outputs in `results/`: `icp_tune_metrics.txt`, `noise_v5_<session>.json/.txt`,
-`subsets_<session>_noise_v5_<other>+<other>.csv/.log`. Then judge with the rule in DECISIONS (3-run ranges must not
+`subsets_<session>_noise_v5_<other>+<other>[_fixed|_identity].csv/.log` (columns include nees_mean, nees_in95). Then judge with the rule in DECISIONS (3-run ranges must not
 overlap and the mean ATE change must exceed 5%).
+
+## Runtime measured in the local dry run (2012-04-29, 12,962 frames, 8 cores; supercomputer/dry_run_local.sh)
+- KISS-ICP, 3 runs in parallel: 25 min. Noise fit: 14 s.
+- 7 LiDAR subsets x 3 inputs: about 1 min per weighting (2.5 min for identity, where L+G hits 500 iterations).
+- Not measured: the IMU subsets WITHOUT LiDAR (I, IW, IWF, IWG, ...), the slow ones. On the smoke session they took
+  up to ~300 Dogleg steps of ~30 s; per step time grows at least linearly with frames, so on 2012-01-15 (33,463
+  frames) a single such run may take many hours. Run the three weightings as separate jobs.
 
 ## Runtime (from the smoke session, 5,104 frames, 8 cores)
 - With LiDAR in the subset: seconds to a minute per run.

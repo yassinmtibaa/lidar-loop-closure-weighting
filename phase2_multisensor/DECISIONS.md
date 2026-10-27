@@ -634,3 +634,33 @@
   - T3: on every session, fewer than 25% of the decided additions are worse (smoke v5: 18 of 75 = 24%).
   - T4: at least 28 of 31 subsets converge on every session.
   - T5: KISS-ICP is deterministic on each tune session (3 runs bit-identical), as on the smoke session.
+
+## 2026-10-27: kit completed before the supercomputer (agreed with Yassine: NEES, weightings, dry run)
+- NEES: position NEES every 50 frames (fusion/subsets.py position_nees): e = ground-truth minus estimated position in
+  the estimate's body frame, S = translation block of the Pose3 marginal from the sparse Gauss-Newton Hessian at the
+  estimate (gtsam.Marginals' Cholesky fails on IMU subsets; the sparse LU gives identical numbers where Marginals
+  works, checked on L). Ground truth anchored to the first pose without GPS, shifted by the mean offset with GPS.
+  Consistent: mean ~3, ~95% under 7.815.
+- Weightings (scripts/subsets_run.py --weights): predicted = v5 as fitted; fixed = one sigma per sensor (no turn-
+  dependent wheel sigma, no GPS inflation); identity = unit sigma on every observed axis of L, W, F, G (IMU keeps its
+  densities). Wheel calibration in all three.
+- Change found while testing identity: the always-on smoothness factor (1 rad, 10 m per frame) competed with unit
+  weights (identity L alone gave 141.7 m instead of the odometry's 1.93 m). It is now added only to subsets without
+  L and I (which observe all axes). Checked: predicted-weight results unchanged (L 1.926, LI 1.182, LW 2.555 vs 2.554,
+  LG 3.894, LIF 1.256, LIWFG 3.285 m).
+- Smoke observations (in-sample, not results): predicted weights give NEES 0.19 (L), 0.48 (LW): over-cautious;
+  17.5 (LI), 23.4 (LG), 25.2 (LIWFG): over-confident. Identity weights: LI 27.1 m, LW 14.1 m ATE.
+- Added predictions for the tune-session sweep (with T1-T5):
+  - T6: on every tune session, identity weights make more additions worse than predicted weights do.
+  - T7: predicted weights do NOT yet give consistent uncertainty: on every tune session, fewer than half of the
+    converged subsets have mean NEES within [1, 9].
+- Found in the dry-run noise fit (2012-04-29): only 14 of 11,550 GPS fixes are 2D, giving 2D sigmas of 0.22 / 0.12 m,
+  tighter than the 3D fixes. Rule added before any sweep uses it: with fewer than 100 2D fixes, the 2D sigmas are
+  set to the 3D-fix north/east sigmas. Smoke fit unaffected (1,012 2D fixes). The dry-run JSON predates the rule.
+- Dry run so far: KISS-ICP on 2012-04-29 bit-identical over 3 runs (ATE 4.609996 m, = the 2026-10-11 baseline);
+  3 parallel runs took 25 min.
+- Dry run finished (results/dryrun_*; noise fitted on 2012-04-29 itself, 7 LiDAR subsets): the pipeline runs end to
+  end for all three weightings, with NEES. Runtimes in supercomputer/README.md. Observed, NOT a result and NOT used
+  to change T1-T7 (in-sample noise, partial sweep, and the 2D-GPS rule was not yet in the JSON): on this session
+  L+I is worse than L (17.5 vs 4.61 m ATE) under predicted weights, unlike the smoke session; L+G 3.65 m and
+  L+I+W+F+G 3.10 m are better than L; identity weights again much worse with I (88 m) and W (57 m).

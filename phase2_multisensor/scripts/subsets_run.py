@@ -6,7 +6,11 @@ Fit the noise model on a session (uses its ground truth; tune sessions only) and
 Run all 31 subsets with a frozen noise model (no ground truth used except for scoring):
   .venv/bin/python scripts/subsets_run.py --seq 2012-04-29 --runs icp_r1,icp_r2,icp_r3 --noise results/noise_v5_2012-04-29.json --jobs 32
 --runs: KISS-ICP run names; poses are read from results/<name>_seq<seq>/latest/<seq>_poses.npy.
-Writes results/subsets_<seq>_<tag>.csv (tag = noise file stem) and a .log with one line per finished run."""
+--weights: predicted (noise model v5 as fitted), fixed (one sigma per sensor: no turn-dependent wheel sigma, no GPS
+correlation inflation) or identity (unit sigma on every observed axis of L, W, F, G; IMU keeps its densities, it has
+no identity analogue). Wheel calibration is applied in all three (it corrects the measurement, not its weight).
+--nees N: position NEES every N frames (0 = off).
+Writes results/subsets_<seq>_<tag>.csv (tag from the noise fit and weighting) and a .log, one line per finished run."""
 import argparse
 import csv
 import itertools
@@ -38,6 +42,15 @@ def save_noise(noise, path, source_seq):
     json.dump(d, open(path, "w"), indent=1)
 
 
+def apply_weights(noise, weights):
+    if weights == "fixed":
+        noise.wheel_per_frame, noise.gps_inflation = None, 1.0
+    elif weights == "identity":
+        noise.lidar, noise.wheel, noise.fog_yaw = np.ones(6), np.ones(3), 1.0
+        noise.gps3, noise.gps2, noise.wheel_per_frame, noise.gps_inflation = np.ones(3), np.ones(2), None, 1.0
+    return noise
+
+
 def load_noise(path, t, m):
     """Frozen noise for a new session: applies the stored wheel calibration and per-frame wheel sigma line.
     path may list several JSON files separated by commas: their parameters are averaged (e.g. leave-one-out)."""
@@ -61,6 +74,8 @@ if __name__ == "__main__":
     ap.add_argument("--noise")
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--only")
+    ap.add_argument("--weights", choices=["predicted", "fixed", "identity"], default="predicted")
+    ap.add_argument("--nees", type=int, default=0)
     a = ap.parse_args()
     configure(a.seq, a.runs.split(","))
     t, m, odom, G, gps, R_LI = ss.setup()
@@ -70,19 +85,22 @@ if __name__ == "__main__":
         print("\n".join(lines))
         sys.exit()
     noise, d = load_noise(a.noise, t, m)
-    tag = "noise_v5_" + d["fitted_on"]
+    noise = apply_weights(noise, a.weights)
+    tag = "noise_v5_" + d["fitted_on"] + ("" if a.weights == "predicted" else "_" + a.weights)
     combos = ["".join(c) for n in range(1, 6) for c in itertools.combinations(subsets.SENSORS, n)]
     if a.only:
         combos = [c for c in combos if c in a.only.split(",")]
     tasks = [(s, r) for s in combos for r in (range(len(odom)) if "L" in s else (0,))]
     out = os.path.join(ROOT, "results", f"subsets_{a.seq}_{tag}")
     rows = []
-    with Pool(a.jobs, ss.init_worker, (m, noise, odom, G)) as pool, open(out + ".log", "a") as log:
-        log.write(f"seq {a.seq} runs {a.runs} noise {a.noise} (fitted on {d['fitted_on']})\n")
+    with Pool(a.jobs, ss.init_worker, (m, noise, odom, G, False, a.nees)) as pool, open(out + ".log", "a") as log:
+        log.write(f"seq {a.seq} runs {a.runs} noise {a.noise} (fitted on {d['fitted_on']}) weights {a.weights}\n")
         for row in pool.imap_unordered(ss.run_one, tasks):
             rows.append(row)
             log.write(f"{row['subset']:6s} r{row['run']} finite={row['finite']} conv={row['converged']} "
-                      f"it={row['iterations']} ATE {row['ate']:.3f} KITTI {row['kitti']:.3f}\n")
+                      f"it={row['iterations']} ATE {row['ate']:.3f} KITTI {row['kitti']:.3f}"
+                      + (f" NEES {row['nees_mean']:.2f} in95 {row['nees_in95']:.2f}" if "nees_mean" in row else "")
+                      + "\n")
             log.flush()
     for row in [r for r in rows if "L" not in r["subset"]]:
         rows += [dict(row, run=k) for k in range(2, len(odom) + 1)]

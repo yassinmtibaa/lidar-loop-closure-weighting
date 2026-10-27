@@ -3,7 +3,8 @@
 # Never point this at validation or test sessions. Run from phase2_multisensor/. JOBS = cores per session.
 #   step 1  KISS-ICP x3 per session            (~15 min per run for 2012-01-15 at ~37 frames/s)
 #   step 2  fit noise model v5 per session     (minutes)
-#   step 3  31 subsets x 3 inputs per session, noise fitted on the OTHER two tune sessions (leave-one-out)
+#   step 3  31 subsets x 3 inputs x 3 weightings (predicted, fixed, identity) per session, with position NEES;
+#           noise fitted on the OTHER two tune sessions (leave-one-out)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 JOBS=${JOBS:-32}
@@ -32,7 +33,9 @@ if [[ $step == all || $step == sweep ]]; then
   for i in 0 1 2; do
     s=${TUNE[$i]}
     others=$(for j in 0 1 2; do if [[ $j != $i ]]; then printf "results/noise_v5_%s.json," "${TUNE[$j]}"; fi; done)
-    $PY scripts/subsets_run.py --seq $s --runs icp_tune_r1,icp_tune_r2,icp_tune_r3 \
-      --noise "${others%,}" --jobs "$JOBS"
+    for w in predicted fixed identity; do
+      $PY scripts/subsets_run.py --seq $s --runs icp_tune_r1,icp_tune_r2,icp_tune_r3 \
+        --noise "${others%,}" --weights $w --nees 50 --jobs "$JOBS"
+    done
   done
 fi
