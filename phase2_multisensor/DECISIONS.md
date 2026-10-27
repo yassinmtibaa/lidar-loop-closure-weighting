@@ -619,3 +619,18 @@
     IMU's velocity and attitude are only tied to wheels' planar increments; a remaining IMU modelling problem (bias
     walk placeholder, zero-velocity prior only at the start). Not investigated.
 - Step 1 (wheels) stops here as agreed; next is step 2 (tune-session preparation).
+
+## 2026-10-27: 2.4 tune-session protocol (step 2 of 3), fixed BEFORE any tune-session sweep
+- Kit: supercomputer/run_tune.sh + README. scripts/subsets_run.py generalizes the smoke sweep to any session and
+  reproduces the smoke v5 numbers exactly (checked on L, LI, LW, WF, LIWFG).
+- Sessions: tune only (2012-01-15, 2012-04-29, 2012-08-04). Inputs: 3 new KISS-ICP runs per session (icp_tune_r1..3).
+- Noise: model v5 fitted per tune session (ground truth of that session; wheel calibration, drift-equivalent L/W/F,
+  turn-dependent W, GPS correlation inflation, IMU densities while moving); each session is run with the AVERAGE of the
+  OTHER two sessions' fits (leave-one-out), so no session is scored with noise fitted on itself.
+- Rule: as before (3-run ATE ranges do not overlap AND mean change > 5%); a subset counts only if all its runs converge.
+- Predictions (per tune session, from the smoke results):
+  - T1: L -> L+I is better on at least 2 of 3 sessions.
+  - T2: L -> L+G is worse on at least 2 of 3 sessions.
+  - T3: on every session, fewer than 25% of the decided additions are worse (smoke v5: 18 of 75 = 24%).
+  - T4: at least 28 of 31 subsets converge on every session.
+  - T5: KISS-ICP is deterministic on each tune session (3 runs bit-identical), as on the smoke session.

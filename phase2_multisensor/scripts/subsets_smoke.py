@@ -100,9 +100,16 @@ def calibrate_wheels(t, m, G):
     mv = np.r_[d > 0.2, d > 0.2]
     res = lambda p: np.r_[(p[0] * L + p[1] * R) / 2 - d, (p[0] * L - p[1] * R) / p[2] - gyaw][mv]
     sl, sr, b = least_squares(res, [1.0, 1.0, TRACK_WIDTH]).x
-    cal = nclt.Wheels(w.t, w.v_left * sl, w.v_right * sr)
-    m.wheel = np.array([sensors.wheel_increment(cal, t[k], t[k + 1], None, b) for k in range(len(t) - 1)])
+    apply_wheel_cal(t, m, (sl, sr, b))
     return sl, sr, b
+
+
+def apply_wheel_cal(t, m, cal):
+    """Recompute m.wheel from calibrated wheels: cal = (s_left, s_right, track_width)."""
+    sl, sr, b = cal
+    w = nclt.read_wheels(S)
+    w = nclt.Wheels(w.t, w.v_left * sl, w.v_right * sr)
+    m.wheel = np.array([sensors.wheel_increment(w, t[k], t[k + 1], None, b) for k in range(len(t) - 1)])
 
 
 def estimate_noise_v2(t, m, odom, G, gps, window=50, wheel_cal=False):
@@ -133,6 +140,7 @@ def estimate_noise_v2(t, m, odom, G, gps, window=50, wheel_cal=False):
     fr = np.array([m.fog[a:b].sum() for a, b in spans]) - gyaw
     fog = float(robust(np.angle(np.exp(1j * fr)))) / np.sqrt(window)
     noise = subsets.Noise(lidar, wheel, fog, base.gps3, base.gps2, base.acc_density, base.gyro_density)
+    noise.wheel_cal = tuple(float(x) for x in cal) if wheel_cal else None
     lines = [f"noise model v2: {len(spans)} windows of {window} frames, sigma = robust(window residual)/sqrt({window})",
              (f"wheel scale s = {scale:.4f} (median ground-truth / wheel distance, frames moving > 0.2 m)" if scale
               else "wheel calibration: s_left {:.4f}, s_right {:.4f}, track width {:.4f} m".format(*cal)),
@@ -158,12 +166,14 @@ def estimate_noise_v3(t, m, odom, G, gps, bins=5, wheel_cal=False):
     centers = np.array([np.median(u[which == b]) for b in range(bins)])
     sig = np.array([robust(r[which == b]) for b in range(bins)])          # (bins, 3)
     per_frame = np.empty_like(r)
-    fits = []
+    fits, lines_scaled = [], []
     for c in range(3):
         b_, a_ = np.polyfit(centers, sig[:, c], 1)
         raw = np.maximum(a_ + b_ * u, 1e-6)
-        per_frame[:, c] = raw * v2.wheel[c] / np.median(raw)          # median frame keeps its v2 sigma
+        f = v2.wheel[c] / np.median(raw)                                 # median frame keeps its v2 sigma
+        per_frame[:, c] = raw * f
         fits.append((a_, b_))
+        lines_scaled.append((float(a_ * f), float(b_ * f)))
     # GPS residual autocorrelation (3D fixes, horizontal)
     k = np.array([g[0] for g in m.gps]); ned = np.array([g[1] for g in m.gps]); mode = np.array([g[2] for g in m.gps])
     sel = mode == 3
@@ -183,6 +193,7 @@ def estimate_noise_v3(t, m, odom, G, gps, bins=5, wheel_cal=False):
     infl = float(np.sqrt(max(1.0, tau * rate)))
     v3 = subsets.Noise(v2.lidar, v2.wheel, v2.fog_yaw, v2.gps3, v2.gps2, v2.acc_density, v2.gyro_density,
                        wheel_per_frame=per_frame, gps_inflation=infl)
+    v3.wheel_cal, v3.wheel_line = v2.wheel_cal, lines_scaled
     lines += ["noise model v3:",
               "W sigma(u) line fits per component (a, b) on per-frame residuals vs |wheel yaw|: "
               + ", ".join(f"({a_:.4g}, {b_:.4g})" for a_, b_ in fits),

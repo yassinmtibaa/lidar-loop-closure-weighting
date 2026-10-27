@@ -38,7 +38,9 @@ written, tune + validation sessions unpacked.
 16. DONE 2026-10-27: wheel calibration (v5: per-wheel scales + track width): wheel heading bias was the wheel
    problem (W 111 -> 25 m, LW 18.5 -> 2.55 m, WF 1.85 m). All 31 converge. Remaining harm: GPS (9 of 15
    additions worse), IMU without LiDAR (I+W 127 m). P2.6a met, b/c/d not met.
-17. NEXT (agreed order): step 2 = prepare tune-session runs (supercomputer); step 3 = Phase 2.1 write-up.
+17. DONE 2026-10-27: step 2, supercomputer kit for the 2.4 tune-session sweep (supercomputer/README.md,
+   run_tune.sh, scripts/subsets_run.py); protocol and predictions T1-T5 registered. Not run yet.
+18. NEXT: step 3 = Phase 2.1 write-up. Then launch run_tune.sh when supercomputer access arrives.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
