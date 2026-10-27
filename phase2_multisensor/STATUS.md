@@ -1,7 +1,7 @@
 # Status (update at the end of every session)
 
 **Last update:** 2026-10-25
-**Current phase:** 2.3 started on the smoke session (all sensors in the graph); 2.1 write-up pending
+**Current phase:** 2.3 started on the smoke session (all sensors in the graph); 2.1 written up
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
 
@@ -40,7 +40,9 @@ written, tune + validation sessions unpacked.
    additions worse), IMU without LiDAR (I+W 127 m). P2.6a met, b/c/d not met.
 17. DONE 2026-10-27: step 2, supercomputer kit for the 2.4 tune-session sweep (supercomputer/README.md,
    run_tune.sh, scripts/subsets_run.py); protocol and predictions T1-T5 registered. Not run yet.
-18. NEXT: step 3 = Phase 2.1 write-up. Then launch run_tune.sh when supercomputer access arrives.
+18. DONE 2026-10-27: step 3, Phase 2.1 written up in docs/report/report.tex (section 7 "Replication on NCLT",
+   abstract, limitations, conclusion; g2o half-angle note). report.pdf rebuilt (7 pages).
+19. NEXT: launch supercomputer/run_tune.sh when access arrives (predictions T1-T5 already registered).
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
