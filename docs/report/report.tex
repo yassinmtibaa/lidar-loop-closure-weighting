@@ -220,8 +220,8 @@ shares the LiDAR being evaluated. Metrics and software are as in Section~2 (a Na
 metrics reproduces \texttt{evo} for ATE and the KITTI metric).
 
 \paragraph{Noise.} Unlike on KITTI, KISS-SLAM is far from repeatable on NCLT: with the same number of accepted
-closures, ATE ranged from 2.0 to 6.4\,m on 2012-04-29. KISS-ICP itself was bit-identical across runs on the session
-where it was checked, so the spread comes from the SLAM side. Every configuration was therefore run three times,
+closures, ATE ranged from 2.0 to 6.4\,m on 2012-04-29. Repeated KISS-ICP runs agree to about $10^{-11}$\,m on the four sessions
+checked, so the spread arises inside KISS-SLAM, whose own odometry also varies between runs. Every configuration was therefore run three times,
 and a difference counts only if the three-run ranges do not overlap. A six-run recheck on 2012-05-26 after an
 operating-system upgrade showed that three runs had underestimated the spread, and one validation claim was
 retracted.

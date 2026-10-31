@@ -673,3 +673,14 @@
 - Effect on the predictions: T1, T2, T5 can be judged fully. T3, T4, T6, T7 are defined over all subsets, so here they
   get a PARTIAL reading over the L subsets only, labelled as such; the verdicts wait for the full sweep.
 - 4 parallel jobs (30 GB RAM, about 10 GB free when starting).
+
+## 2026-10-31: CORRECTION and T5 verdict -> T5 NOT MET as worded (repeatable to ~1e-11 m)
+- Earlier entries and the report said KISS-ICP runs are "bit-identical". That was wrong: it was inferred from metrics
+  printed to 6 decimals, never compared bit by bit. The pose files differ from frame 1 on. Max difference between
+  runs: 6e-13 m (2013-01-10), 2.5e-12 (2012-01-15), 2.5e-12 (2012-04-29), 7.5e-12 (2012-08-04), all four sessions.
+  ATE and KITTI metrics agree to all printed digits. So KISS-ICP is repeatable to rounding error, not bit-identical.
+- T5 ("3 runs bit-identical") is NOT MET as worded. Practical consequence unchanged: the 3 inputs give no noise band.
+- Also corrected: the 2026-10-25 line that run-to-run KISS-SLAM noise "must come from the SLAM side (closures)". It
+  conflicts with the 2026-10-25 P2.2c observation that KISS-SLAM's OWN odometry varies between runs (2012-08-04,
+  1.62-2.06%). The spread arises inside KISS-SLAM; closures alone are not established as the cause. Report section 7
+  reworded accordingly.
