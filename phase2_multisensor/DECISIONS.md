@@ -684,3 +684,8 @@
   conflicts with the 2026-10-25 P2.2c observation that KISS-SLAM's OWN odometry varies between runs (2012-08-04,
   1.62-2.06%). The spread arises inside KISS-SLAM; closures alone are not established as the cause. Report section 7
   reworded accordingly.
+
+## 2026-10-31: laptop run stopped by out-of-memory, restarted (implementation only)
+- 4 parallel jobs peaked at 22 GB on 2012-01-15 and the kernel killed the service after 15 finished runs. Restarted
+  with 2 jobs. Runs now save as they finish (.jsonl) and resume after a crash or reboot. No settings changed; the
+  15 runs are repeated. Partial log kept: results/subsets_2012-01-15_oom_stopped_20261031.log.

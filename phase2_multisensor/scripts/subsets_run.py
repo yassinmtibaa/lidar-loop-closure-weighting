@@ -74,6 +74,7 @@ if __name__ == "__main__":
     ap.add_argument("--noise")
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--only")
+    ap.add_argument("--outdir", default=os.path.join(ROOT, "results"))
     ap.add_argument("--weights", choices=["predicted", "fixed", "identity"], default="predicted")
     ap.add_argument("--nees", type=int, default=0)
     a = ap.parse_args()
@@ -91,19 +92,25 @@ if __name__ == "__main__":
     if a.only:
         combos = [c for c in combos if c in a.only.split(",")]
     tasks = [(s, r) for s in combos for r in (range(len(odom)) if "L" in s else (0,))]
-    out = os.path.join(ROOT, "results", f"subsets_{a.seq}_{tag}")
+    out = os.path.join(a.outdir, f"subsets_{a.seq}_{tag}")
     rows = []
+    if os.path.exists(out + ".jsonl"):                # resume: finished runs survive a crash or reboot
+        rows = [json.loads(line) for line in open(out + ".jsonl")]
+        done = {(r["subset"], r["run"] - 1) for r in rows}
+        tasks = [t_ for t_ in tasks if t_ not in done]
     with Pool(a.jobs, ss.init_worker, (m, noise, odom, G, False, a.nees)) as pool, open(out + ".log", "a") as log:
         log.write(f"seq {a.seq} runs {a.runs} noise {a.noise} (fitted on {d['fitted_on']}) weights {a.weights}\n")
         for row in pool.imap_unordered(ss.run_one, tasks):
             rows.append(row)
+            with open(out + ".jsonl", "a") as f:
+                f.write(json.dumps(row) + "\n")
             log.write(f"{row['subset']:6s} r{row['run']} finite={row['finite']} conv={row['converged']} "
                       f"it={row['iterations']} ATE {row['ate']:.3f} KITTI {row['kitti']:.3f}"
                       + (f" NEES {row['nees_mean']:.2f} in95 {row['nees_in95']:.2f}" if "nees_mean" in row else "")
                       + "\n")
             log.flush()
     for row in [r for r in rows if "L" not in r["subset"]]:
-        rows += [dict(row, run=k) for k in range(2, len(odom) + 1)]
+        rows += [dict(row, run=k) for k in range(2, len(odom) + 1) if row["run"] == 1]
     rows.sort(key=lambda r: (len(r["subset"]), r["subset"], r["run"]))
     with open(out + ".csv", "w", newline="") as f:
         w = csv.DictWriter(f, list(rows[0]))
