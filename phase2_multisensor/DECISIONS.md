@@ -664,3 +664,12 @@
   to change T1-T7 (in-sample noise, partial sweep, and the 2D-GPS rule was not yet in the JSON): on this session
   L+I is worse than L (17.5 vs 4.61 m ATE) under predicted weights, unlike the smoke session; L+G 3.65 m and
   L+I+W+F+G 3.10 m are better than L; identity weights again much worse with I (88 m) and W (57 m).
+
+## 2026-10-31: tune-session sweep started on the laptop, LiDAR subsets only (fixed BEFORE the run)
+- Yassine chose to start locally, before supercomputer access. Protocol exactly as registered (2026-10-27): leave-one-
+  out noise, three weightings, NEES every 50 frames, same rule; nothing re-tuned, T1-T7 unchanged. Tune sessions only.
+- Scope: the 16 subsets containing L, 3 inputs each. The 15 others (the slow IMU-without-LiDAR ones among them) wait
+  for the supercomputer; their cost on 13-33k frames does not fit the laptop.
+- Effect on the predictions: T1, T2, T5 can be judged fully. T3, T4, T6, T7 are defined over all subsets, so here they
+  get a PARTIAL reading over the L subsets only, labelled as such; the verdicts wait for the full sweep.
+- 4 parallel jobs (30 GB RAM, about 10 GB free when starting).

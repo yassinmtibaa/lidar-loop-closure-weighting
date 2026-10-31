@@ -8,6 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 JOBS=${JOBS:-32}
+ONLY=${ONLY:-}          # optional comma-separated subset list (local partial runs)
 TUNE=(2012-01-15 2012-04-29 2012-08-04)
 PY=.venv/bin/python
 step=${1:-all}
@@ -35,7 +36,7 @@ if [[ $step == all || $step == sweep ]]; then
     others=$(for j in 0 1 2; do if [[ $j != $i ]]; then printf "results/noise_v5_%s.json," "${TUNE[$j]}"; fi; done)
     for w in predicted fixed identity; do
       $PY scripts/subsets_run.py --seq $s --runs icp_tune_r1,icp_tune_r2,icp_tune_r3 \
-        --noise "${others%,}" --weights $w --nees 50 --jobs "$JOBS"
+        --noise "${others%,}" --weights $w --nees 50 --jobs "$JOBS" ${ONLY:+--only "$ONLY"}
     done
   done
 fi
