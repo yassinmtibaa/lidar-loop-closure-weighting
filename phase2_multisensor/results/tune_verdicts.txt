@@ -1,0 +1,56 @@
+2012-01-15 predicted: converged 16/16; additions better 13, within 4, worse 15 (47% of 32 decided), undecided 0; NEES in [1,9] 1/16
+   worse: L+I L+W L+F L+G LF+I LF+W LF+G LG+F LFG+W LIF+G LIG+F LWF+G LWG+F LIWF+G LIWG+F
+2012-01-15 fixed    : converged 11/16; additions better 7, within 2, worse 8 (47% of 17 decided), undecided 15; NEES in [1,9] 2/11
+   worse: L+I L+W L+F LF+I LF+W LI+G LIF+G LIW+G
+2012-01-15 identity : converged 8/16; additions better 4, within 1, worse 7 (58% of 12 decided), undecided 20; NEES in [1,9] 0/8
+   worse: L+I L+W LF+I LF+W LI+F LW+I LWF+I
+2012-04-29 predicted: converged 16/16; additions better 19, within 6, worse 7 (22% of 32 decided), undecided 0; NEES in [1,9] 3/16
+   worse: L+I L+W LF+I LF+W LF+G LG+F LWG+F
+2012-04-29 fixed    : converged 16/16; additions better 17, within 9, worse 6 (19% of 32 decided), undecided 0; NEES in [1,9] 2/16
+   worse: L+I L+W L+G LF+I LF+W LF+G
+2012-04-29 identity : converged 12/16; additions better 6, within 6, worse 8 (40% of 20 decided), undecided 12; NEES in [1,9] 0/12
+   worse: L+I L+W LF+I LF+W LI+W LW+I LIF+W LWF+I
+2012-08-04 predicted: converged 16/16; additions better 10, within 10, worse 12 (38% of 32 decided), undecided 0; NEES in [1,9] 0/16
+   worse: L+W LF+W LF+G LG+F LI+W LI+G LIF+W LIF+G LIG+F LWG+F LIWF+G LIWG+F
+2012-08-04 fixed    : converged 16/16; additions better 13, within 6, worse 13 (41% of 32 decided), undecided 0; NEES in [1,9] 0/16
+   worse: L+W L+G LF+W LF+G LI+W LI+G LIF+W LIF+G LIG+F LWF+G LWG+F LIWF+G LIWG+F
+2012-08-04 identity : converged 12/16; additions better 7, within 3, worse 10 (50% of 20 decided), undecided 12; NEES in [1,9] 0/12
+   worse: L+I L+W LF+I LF+W LI+G LIF+G LIG+W LIW+G LIFG+W LIWF+G
+
+ATE mean (m) / NEES mean, predicted | fixed | identity
+L      2012-01-15      9.85 /     0.03 |     9.85 /     0.03 |     9.85 /     0.00
+L      2012-04-29      4.61 /     0.09 |     4.61 /     0.09 |     4.61 /     0.00
+L      2012-08-04     30.89 /     0.12 |    30.89 /     0.12 |    30.89 /     0.00
+LI     2012-01-15     32.93 /    33.57 |    32.93 /    33.57 |   263.72 /     0.30
+LI     2012-04-29     12.69 /    35.62 |    12.69 /    35.62 |    85.44 /     0.22
+LI     2012-08-04     18.96 /    67.57 |    18.96 /    67.57 |    66.13 /     0.04
+LW     2012-01-15     25.18 /     1.06 |    27.99 /     1.30 |   158.10 /     0.00
+LW     2012-04-29     10.15 /     1.60 |    10.73 /     1.92 |    75.06 /     0.00
+LW     2012-08-04     34.24 /     0.74 |    39.13 /     0.82 |   201.21 /     0.00
+LF     2012-01-15     11.09 /     0.12 |    11.09 /     0.12 |     9.30 /     0.00
+LF     2012-04-29      3.54 /     0.18 |     3.54 /     0.18 |     3.60 /     0.00
+LF     2012-08-04     25.71 /     0.18 |    25.71 /     0.18 |    21.81 /     0.00
+LG     2012-01-15     17.82 /   497.11 |    36.93 /  9399.63* |   102.46 /   901.01*
+LG     2012-04-29      3.78 /    11.45 |     5.42 /   233.02 |     6.54 /    60.65*
+LG     2012-08-04     21.35 /   744.60 |    37.69 /  2854.16 |   101.12 /   822.66*
+LIF    2012-01-15     15.66 /    31.46 |    15.66 /    31.46 |   277.19 /     0.10
+LIF    2012-04-29      7.50 /    34.27 |     7.50 /    34.27 |    83.47 /    -0.49
+LIF    2012-08-04     12.90 /    64.94 |    12.90 /    64.94 |    62.81 /     0.07
+LIG    2012-01-15     18.22 /   956.24 |    36.64 / 11247.32 |   319.50 / 65592.90*
+LIG    2012-04-29      3.17 /     8.50 |     4.26 /   287.91 |     6.45 /  1517.56
+LIG    2012-08-04     20.49 /  2245.99 |    27.46 /  4268.21 |   101.21 / 15217.27
+LIWF   2012-01-15     12.63 /    13.35 |    13.11 /    12.86 |   238.79 /     0.60
+LIWF   2012-04-29      4.97 /    26.74 |     4.88 /    26.07 |   110.17 /     0.58
+LIWF   2012-08-04     21.96 /    42.07 |    22.89 /    42.13 |    32.02 /     0.11
+LIWFG  2012-01-15     21.40 /  2452.12 |    35.04 / 11727.42* |   332.84 / 77518.35*
+LIWFG  2012-04-29      2.92 /    13.21 |     4.11 /   312.64 |     6.43 /  1520.04
+LIWFG  2012-08-04     27.30 /  2628.51 |    34.39 /  9287.56 |   142.34 / 46196.72
+* = not all runs converged
+
+T1 (L -> L+I better on >= 2 of 3): ['worse', 'worse', 'better'] -> NOT MET
+T2 (L -> L+G worse on >= 2 of 3): ['worse', 'better', 'better'] -> NOT MET
+T3 partial (worse < 25% on every session): ['47%', '22%', '38%']
+T4 partial (converged, L subsets only): ['16/16', '16/16', '16/16']
+T5: NOT MET as worded, see DECISIONS 2026-10-31
+T6 partial (identity worse count > predicted, every session): [(7, 15), (8, 7), (10, 12)]
+T7 partial (under half of converged subsets with NEES in [1,9]): ['1/16', '3/16', '0/16']

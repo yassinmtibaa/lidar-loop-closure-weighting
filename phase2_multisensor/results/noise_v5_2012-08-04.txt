@@ -1,0 +1,18 @@
+noise model v2: 480 windows of 50 frames, sigma = robust(window residual)/sqrt(50)
+wheel calibration: s_left 0.9390, s_right 0.9462, track width 0.5514 m
+L drift-equivalent per-frame sigmas (rx ry rz rad, x y z m): [0.00318 0.00222 0.00344 0.02023 0.02842 0.0214 ]
+W drift-equivalent per-frame sigmas (x m, y m, yaw rad), scaled wheels: [0.01914 0.06317 0.00952]
+F drift-equivalent per-frame yaw sigma: 0.003132 rad
+G and I unchanged: G3 [2.391 2.353 5.419], G2 [2.256 2.517], acc 0.00286, gyro 0.002604
+noise model v3:
+W sigma(u) line fits per component (a, b) on per-frame residuals vs |wheel yaw|: (0.004865, 0.0408), (0.003704, 0.04428), (0.0066, 0.031)
+W bins (|wheel yaw| median rad): [0.0018 0.0087 0.0169 0.0282 0.0497]; per-bin sigmas x/y/yaw:
+[[0.004  0.0028 0.0046]
+ [0.0058 0.0048 0.008 ]
+ [0.0059 0.0048 0.0082]
+ [0.0064 0.0052 0.0082]
+ [0.0065 0.0055 0.0072]]
+W per-frame sigma ranges: x 0.0168-0.0529 m, yaw 0.0088-0.0195 rad
+G residual correlation time tau = 30 s at 2.17 fixes/s -> sigma inflation x8.07
+noise model v4:
+IMU densities while moving (1 s high-pass, speed > 0.5 m/s): acc 0.01163 m/s^2/sqrt(Hz), gyro 0.01347 rad/s/sqrt(Hz)

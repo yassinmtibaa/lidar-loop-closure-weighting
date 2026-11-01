@@ -689,3 +689,27 @@
 - 4 parallel jobs peaked at 22 GB on 2012-01-15 and the kernel killed the service after 15 finished runs. Restarted
   with 2 jobs. Runs now save as they finish (.jsonl) and resume after a crash or reboot. No settings changed; the
   15 runs are repeated. Partial log kept: results/subsets_2012-01-15_oom_stopped_20261031.log.
+
+## 2026-11-01: tune-session sweep on the laptop (L subsets), results/tune_verdicts.txt -> T1, T2 NOT MET
+- 432 runs (16 L subsets x 3 inputs x 3 weightings x 3 sessions), leave-one-out noise, no re-tuning. Finished
+  2026-10-31 20:59, about 6 h at 2 jobs. Scope and partial readings as registered 2026-10-31.
+- T1 NOT MET: L -> L+I worse on 2012-01-15 (9.85 -> 32.9 m) and 2012-04-29 (4.61 -> 12.7 m), better on 2012-08-04
+  (30.9 -> 19.0 m). The smoke gain (1.93 -> 1.18 m) did not transfer.
+- T2 NOT MET: L -> L+G worse on 2012-01-15 (17.8 m), better on 2012-04-29 (3.78 m) and 2012-08-04 (21.4 m).
+- T5 NOT MET as worded (entry of 2026-10-31).
+- Partial readings over the 32 additions among L subsets, verdicts wait for the full sweep:
+  - T3: worse 47%, 22%, 38% under predicted weights (registered bound < 25% on every session): would fail as it stands.
+  - T4: 16/16 converge under predicted on all sessions. Fixed 11/16 on 2012-01-15; identity 8/16, 12/16, 12/16.
+  - T6: worse counts identity vs predicted 7 vs 15, 8 vs 7, 10 vs 12: holds on one session only by the registered count.
+    The count is misleading because identity leaves 12-20 pairs undecided; as a share of decided pairs identity is
+    higher everywhere (58/47, 40/22, 50/38%). Recorded as-is, the wording is not changed afterwards.
+  - T7: subsets with mean NEES in [1, 9]: 1/16, 3/16, 0/16: holds so far.
+- What weighting did (mean ATE, predicted | fixed | identity): L+I 32.9 | 32.9 | 264 (2012-01-15); L+W 25.2 | 28.0 | 158;
+  L+G 17.8 | 36.9 | 102; L+I+G 20.5 | 27.5 | 101 (2012-08-04). Predicted beat fixed on every G subset shown (fixed
+  and predicted differ only in W and G) and identity was far worse wherever I or W was present. NEES: L alone is
+  over-cautious (0.03-0.12); I and G subsets are over-confident (8.5-2600).
+- Caveat on NEES under identity: values are unreliable. One mean is negative (L+I+F 2012-04-29, -0.49), impossible for
+  a positive-definite covariance, so the Hessian is numerically singular there. Do not use identity NEES until fixed.
+- Reading: the smoke-session picture was over-fitted to one session, as feared. On these sessions no single sensor
+  addition is reliably good. Weighting clearly matters, predicted > fixed > identity on ATE, but predicted weights do
+  not make added sensors safe. The hypothesis stays unconfirmed; 2012-08-04's L baseline has a known bad stretch.

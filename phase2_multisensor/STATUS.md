@@ -1,7 +1,7 @@
 # Status (update at the end of every session)
 
 **Last update:** 2026-10-25
-**Current phase:** 2.3 started on the smoke session (all sensors in the graph); 2.1 written up
+**Current phase:** 2.4 tune-session sweep, L subsets done on the laptop; the rest needs the supercomputer
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
 
@@ -44,7 +44,10 @@ written, tune + validation sessions unpacked.
    abstract, limitations, conclusion; g2o half-angle note). report.pdf rebuilt (7 pages).
 19. DONE 2026-10-27: kit completed: position NEES, three weightings (predicted/fixed/identity), smoothness factor only
    without L and I, 2D-GPS fallback rule; local dry run on 2012-04-29 passed (results/dryrun_*). T6, T7 registered.
-20. NEXT: launch supercomputer/run_tune.sh when access arrives (predictions T1-T7 registered, not to be changed).
+20. DONE 2026-11-01: laptop tune sweep, 16 L subsets x 3 weightings (results/tune_verdicts.txt): T1, T2, T5 not met;
+   T3 would fail, T7 holds so far; T4, T6 partial. Smoke gains did not transfer. Identity NEES unreliable (singular).
+21. NEXT: 15 subsets without L need the supercomputer (run_tune.sh resumes finished runs). Decide with Yassine
+   what the T1 failure means before more modelling; do not re-tune on these results without new predictions.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
