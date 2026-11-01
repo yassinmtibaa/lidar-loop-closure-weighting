@@ -46,8 +46,9 @@ written, tune + validation sessions unpacked.
    without L and I, 2D-GPS fallback rule; local dry run on 2012-04-29 passed (results/dryrun_*). T6, T7 registered.
 20. DONE 2026-11-01: laptop tune sweep, 16 L subsets x 3 weightings (results/tune_verdicts.txt): T1, T2, T5 not met;
    T3 would fail, T7 holds so far; T4, T6 partial. Smoke gains did not transfer. Identity NEES unreliable (singular).
-21. NEXT: 15 subsets without L need the supercomputer (run_tune.sh resumes finished runs). Decide with Yassine
-   what the T1 failure means before more modelling; do not re-tune on these results without new predictions.
+21. NEXT (Yassine's choice, 2026-11-01): WAIT for the supercomputer, then `JOBS=32 supercomputer/run_tune.sh` for the 15
+   subsets without L. Copy results/*.jsonl and noise_v5_*.json along, so the 16 L subsets are not rerun. No more
+   modelling until then. Afterwards: judge T3, T4, T6, T7; the IMU question (helps on one session, hurts on two) is open.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember

@@ -18,6 +18,9 @@ entry "2026-10-27: 2.4 tune-session protocol". Validation and test sessions are 
 Smoke session 2013-01-10 too if you want the tests.
 
 ## 3. Run
+The 16 subsets with LiDAR were already run on the laptop (2026-10-31). Copy `results/subsets_*.jsonl`,
+`results/noise_v5_2012-*.json` and `results/icp_tune_r*_seq*/` along: the sweep skips finished runs, and `icp` skips
+finished KISS-ICP runs. Use `supercomputer/run_tune.sh sweep` to start at the sweep.
 ```
 JOBS=32 supercomputer/run_tune.sh          # or one step: icp | noise | sweep
 ```
