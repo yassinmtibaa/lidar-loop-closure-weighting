@@ -713,3 +713,67 @@
 - Reading: the smoke-session picture was over-fitted to one session, as feared. On these sessions no single sensor
   addition is reliably good. Weighting clearly matters, predicted > fixed > identity on ATE, but predicted weights do
   not make added sensors safe. The hypothesis stays unconfirmed; 2012-08-04's L baseline has a known bad stretch.
+
+## 2026-11-14: ICP-Hessian information on KISS-SLAM (2.5 start), DRAFT, fixed BEFORE any run; nothing run yet
+- Source: KISS-SLAM maintainer (PRBonn/kiss-slam#61, closing reply 2026-11-14) posted the Registration.cpp behind
+  Retro-SLAM's `icp-hessian` ablation: H = (sum w_i J_i^T J_i) / N at the converged ICP pose, eigenvalues clamped at
+  1e-3. Saved verbatim in third_party/retro_slam_icp_hessian/ (MIT header kept; notes on frames there). Not built yet.
+- Maintainer guidance: use the same config for the 32-beam HDL-32E, no per-dataset tuning (a smaller KISS-ICP
+  voxel_size "may help slightly", but their experiments use one parameter set). We follow that: configs/
+  kiss_slam_default.yaml unchanged (voxel_size null). The issue is closed; reopen only to report results.
+- Prior evidence, and why it is weak here: Retro-SLAM's table (arXiv 2607.13516, revised) has icp-hessian vs
+  iso-info at ATE better 9 / worse 8, RPE worse 13 / equal 2 / better 2 of 17, single runs, no ranges. Their graph is
+  consecutive-pose; ours is KISS-SLAM's (local-map edges ~100 m, then per-frame stage). Different graph, so the prior
+  only gives a direction.
+- This is narrower than draft step R2 (analysis 2026-11-04): KISS-SLAM graph only, no Retro-SLAM code (not public).
+  R0-R3 stay unregistered drafts.
+
+### Design
+- Sessions: tune only (2012-01-15, 2012-04-29, 2012-08-04). Validation/test not touched by this entry.
+- Conditions (KISS-SLAM 0.0.2, default config, 3 runs each):
+  - I = identity everywhere (KISS-SLAM default). Reuse results/slam_default_r1..3.csv if gate G1 passes.
+  - W = W=1e3 diag(1,1,1,1e3,1e3,1e3) on odometry AND closures, as in 2.1. Reuse results/w_rot1e3_r1..3.csv if G1 passes.
+  - H = ICP-Hessian on odometry factors, identity on closures (= KISS-SLAM's closure default). New, 3 runs.
+    - per-frame factors (second stage): H of frame k, converted to the body frame with the adjoint
+      (H_body = Ad_T^T H_map Ad_T), reordered and converted to g2o's half-angle convention.
+    - local-map factors (first stage): first-order propagation of the per-frame covariances H_body^-1 along the
+      local trajectory, then inverted. This propagation is OUR choice (the maintainer said porting Retro-SLAM to
+      KISS-SLAM's 100 m edges needs changes); it is labelled as ours wherever reported.
+  - Note: H vs I differs only in odometry information; H vs W differs in odometry AND closures.
+- Untuned: the snippet as received. No scale factor on H, no change to the clamp, N-normalization, voxel size or any
+  other parameter, before or after seeing results.
+- Metrics: ATE (aligned) and KITTI % (the 2.1 metrics, scripts/eval.sh), per run.
+- Rule (2.1 rule): a difference counts only if the 3-run ranges do not overlap; otherwise "within noise".
+
+### Gates (if one fails: stop, log, fix only the implementation, re-register before going on)
+- G1 build: KISS-ICP built from source with the snippet (separate venv; the pipx env stays untouched), Hessian computed
+  but unused, reproduces results/icp_baseline.csv ATE and KITTI % on all 3 tune sessions to the printed digits. If it
+  does not, I and W are rerun 3x in the new build instead of reused.
+- G2 frames (synthetic, no data): H_body from the adjoint equals J^T J built from body-frame points to 1e-9
+  (relative), and a GTSAM between-factor with it has the expected whitened error for a known perturbation.
+
+### Predictions
+- H0 shape (one patched KISS-ICP pass per session, no SLAM): median over frames of trace(rot) / trace(trans) of
+  H_body (GTSAM convention, rotation per rad^2) lies in [50, 1000] on every tune session (expected ~ (2/3) * mean
+  weighted squared point range; W=1e3 g2o = 250 in this convention). The clamp binds on < 1% of frames.
+- H1 local accuracy (direction of the paper's RPE result): H has worse KITTI % than I beyond noise on at least 2 of 3
+  sessions. Low confidence: the graph differs from theirs.
+- H2 ATE vs identity: within noise on at least 2 of 3 sessions (paper: 9 better / 8 worse).
+- H3 vs fixed: H vs W within noise on both metrics on at least 2 of 3 sessions (both weight rotation ~100x+ over
+  translation if H0 holds).
+- H4 consistency (no SLAM; per-frame relative motion vs ground truth, Sigma = H_body^-1): median NEES < 0.6 (state
+  dim 6) on every session, i.e. strongly UNDER-confident, because dividing by N and having no residual variance makes
+  the absolute scale arbitrary. This corrects the 2026-11-04 analysis, which called J^T J "overconfident".
+
+### Acceptance (decided now)
+- "H is better than identity on the tune sessions" only if H beats I beyond noise on ATE or KITTI % on at least 2 of
+  3 sessions AND is not worse beyond noise on either metric on any session. Same wording for "better than W".
+- Only if "better than identity" holds: write a separate validation entry (2012-05-26, 2012-10-28) before running it.
+  Otherwise the result is recorded as not better, and no variant (scaled H, other clamp, propagation without the
+  chain) is tried without a new registered entry labelled as tuned.
+- Any outcome is reported as-is, including in a reopened #61 if Yassine wants.
+
+### Cost (laptop, needs Remote Control on Yassine's laptop; not started)
+- Build + bindings + KISS-SLAM patch (KS_ODOM_INFO=hessian), G2 test: no data.
+- 3 patched KISS-ICP passes (G1, H0, H4): ~1 h at 2 jobs. 9 KISS-SLAM H runs: several hours at 2 jobs (2 jobs, not 4:
+  the 2026-10-31 OOM).

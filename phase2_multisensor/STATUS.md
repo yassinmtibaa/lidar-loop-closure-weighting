@@ -1,6 +1,6 @@
 # Status (update at the end of every session)
 
-**Last update:** 2026-10-25
+**Last update:** 2026-11-14
 **Current phase:** 2.4 tune-session sweep, L subsets done on the laptop; the rest needs the supercomputer
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
@@ -49,6 +49,11 @@ written, tune + validation sessions unpacked.
 21. NEXT (Yassine's choice, 2026-11-01): WAIT for the supercomputer, then `JOBS=32 supercomputer/run_tune.sh` for the 15
    subsets without L. Copy results/*.jsonl and noise_v5_*.json along, so the 16 L subsets are not rerun. No more
    modelling until then. Afterwards: judge T3, T4, T6, T7; the IMU question (helps on one session, hurts on two) is open.
+22. 2026-11-14: maintainer posted the ICP-Hessian (J^T J) snippet on #61 and closed the issue (one config for the
+   32-beam LiDAR, no tuning). Snippet saved in third_party/retro_slam_icp_hessian/. Experiment H (ICP-Hessian vs
+   identity vs W=1e3 in KISS-SLAM, tune sessions only, 3 runs, untuned) DRAFTED in DECISIONS (2026-11-14): gates
+   G1-G2, predictions H0-H4, acceptance rule. NOTHING RUN. Waiting for Yassine's OK on the draft and for laptop time
+   (Remote Control). Item 21 (supercomputer sweep) is unchanged.
 All 9 sessions are on disk. Test sessions were run once (2026-10-25); never rerun them for 2.1.
 
 ## Facts to remember
