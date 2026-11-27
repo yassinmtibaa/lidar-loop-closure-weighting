@@ -1,11 +1,14 @@
 # Status (update at the end of every session)
 
-**Last update:** 2026-11-14
+**Last update:** 2026-11-27
 **Current phase:** 2.4 tune-session sweep, L subsets done on the laptop; the rest needs the supercomputer
 **Done:** structure, dataset choice (NCLT), smoke test (ATE 0.17% of path), split fixed, 2.1 predictions
 written, tune + validation sessions unpacked.
 
 ## Next action
+0. 2026-11-27: target = Springer Real-Time Systems special issue (deadline 2026-12-31). Experiment T (timing)
+   registered and experiment H finalized in DECISIONS 2026-11-27. Next: build H (G1, G2), instrument timing (gate T0),
+   then run H and T on the laptop. Nothing run yet.
 1. `pipx inject kiss-slam scipy` (the NCLT loader needs it in the KISS-SLAM env too).
 2. DONE: KISS-ICP baseline (ATE 0.13 / 0.15 / 0.57% of path), see DECISIONS.
 3. DONE: KISS-SLAM default x3. P2.1a met, P2.1b mostly, P2.1c not met; SLAM noise large (see DECISIONS).

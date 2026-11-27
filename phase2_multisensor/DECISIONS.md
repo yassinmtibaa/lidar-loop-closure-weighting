@@ -777,3 +777,76 @@
 - Build + bindings + KISS-SLAM patch (KS_ODOM_INFO=hessian), G2 test: no data.
 - 3 patched KISS-ICP passes (G1, H0, H4): ~1 h at 2 jobs. 9 KISS-SLAM H runs: several hours at 2 jobs (2 jobs, not 4:
   the 2026-10-31 OOM).
+
+## 2026-11-27: target venue and experiment T (timing cost of the weightings), fixed BEFORE any run; nothing run yet
+- Context: Yassine approved (2026-11-27) targeting the Springer *Real-Time Systems* special issue "African Perspectives on
+  Real-Time and Cyber-Physical Systems" (deadline 2026-12-31). The paper has no timing results; this entry adds them.
+  Fit assessment and plan: Claude Doc "Real-Time Systems special issue: fit and plan" (project thread, 2026-11-27).
+- Question: what does each weighting cost in time and memory on a constrained CPU, and does it change how often the
+  online pipeline exceeds the LiDAR period (100 ms, 10 Hz on both KITTI and NCLT)?
+- Accuracy is NOT judged here. Trajectories from T runs are not used for any accuracy claim (accuracy comes from the
+  KITTI split, P2.1d and experiment H). No validation or test session of NCLT is touched.
+
+### Design
+- Conditions: I = identity (default), W = diag(1,1,1,1e3,1e3,1e3) on all factors (as in 2.1), H = ICP-Hessian odometry
+  information (experiment H, 2026-11-14). H enters T only after experiment H's gates G1 and G2 pass; otherwise T reports
+  I vs W only and says so.
+- Build: all three conditions timed in the same build (the experiment-H source build, Hessian computation switched off
+  for I and W), so build differences cannot masquerade as weighting cost. The pipx 2.1 environment is timed once with I
+  as a reference for the build itself.
+- Data: KITTI 00, 05, 08 (closures; 08 is a test sequence, used here only for timing) and the NCLT tune sessions
+  2012-01-15, 2012-04-29, 2012-08-04.
+- Platforms (each condition x sequence run 3 times, ONE job at a time, no other user load):
+  - P2: laptop pinned to 2 cores (taskset), KISS-ICP max_num_threads = 2.
+  - P4: laptop pinned to 4 cores, max_num_threads = 4.
+  - Cores: physical performance cores only, one thread per core (no SMT siblings), chosen once from lscpu and listed in
+    the log. CPU governor and turbo state recorded before every block; set to a fixed frequency if Yassine allows the
+    root change, otherwise recorded as-is and stated as a limitation.
+  - Optional, same protocol: an embedded board (if one is available) and Ayoub's VM (if access arrives). Each gets its
+    own entry here before its first run.
+  - max_num_threads is a config change for timing only. It can change summation order; any accuracy difference it
+    causes is not interpreted.
+- What is timed (time.perf_counter_ns, written per event to a .jsonl, flushed at the end of the run, not per event):
+  - per scan, online: register_frame, the rest of process_scan, and the total including any generate_new_node burst;
+  - per local-map boundary: closure detection (closer.compute) and pose-graph optimization (optimize_pose_graph);
+    optimizer iterations if the g2o wrapper exposes them, otherwise time only;
+  - offline: fine_grained_optimization once per run, reported separately (it runs after the sequence ends, so it is
+    not part of the online deadline);
+  - for H: the Hessian computation per scan, separately;
+  - peak RSS of the process (/usr/bin/time -v).
+  - Data loading is excluded (scans preloaded per frame before timing starts) so disk speed does not enter.
+- Statistics per run: median, 99th percentile and maximum of per-scan total latency; share of scans over 100 ms;
+  median and maximum optimization time per closure; peak RSS. Across the 3 runs: the range of each statistic.
+- Rule: a timing difference counts only if the 3-run ranges of the statistic do not overlap AND the means differ by more
+  than 5%. Otherwise "within noise".
+
+### Gate
+- T0 instrumentation overhead: on KITTI 05, P4, condition I, total wall time with timing on vs off (3 runs each). The
+  instrumentation is accepted if the mean overhead is under 2%. If not: stop, reduce the instrumentation, re-register.
+
+### Predictions (confidence in brackets)
+- T-a (high): W vs I, per-scan median and 99th percentile within noise on every sequence and platform (the weighting is
+  a constant matrix and is only used at local-map boundaries).
+- T-b (low): W vs I, median optimization time per closure differs by less than 20% on every sequence with at least 3
+  closures; direction not predicted.
+- T-c (medium): H vs I, per-scan median latency higher beyond noise on every sequence at P2, and by less than 20% of
+  I's median (one pass over the correspondences versus several ICP iterations).
+- T-d (medium): at P2, condition I, the 99th-percentile per-scan latency is under 100 ms on every KITTI sequence.
+- T-e (medium): at P2, condition I, the MAXIMUM per-scan latency exceeds 100 ms on at least one KITTI sequence,
+  because closure detection and optimization run inside the scan that ends a local map.
+- T-f (high): peak RSS of W vs I within 5% on every sequence.
+- T-g (medium): median per-scan latency on NCLT (HDL-32E) is lower than on KITTI (HDL-64E) for the same condition and
+  platform.
+
+### Reporting
+- Every prediction judged by the rule above and logged here, met or not. Timings are observed values on this hardware,
+  not WCET bounds, and the paper will say so.
+- Cost: laptop, needs Remote Control. Roughly 3 conditions x 6 sequences x 2 platforms x 3 runs = 108 sequential runs;
+  estimate one to two days of laptop time, to be measured on the first block and logged.
+
+## 2026-11-27: experiment H (2026-11-14) finalized for the paper; labels renamed, content unchanged
+- Yassine approved running experiment H as drafted on 2026-11-14 (tune sessions only, untuned, gates G1-G2 first).
+- The draft's prediction labels H0-H4 clash with the paper's hypotheses H1-H4 (report.tex, revised 2026-11-27). They
+  are renamed HX0-HX4 (HX0 shape, HX1 local accuracy, HX2 ATE vs identity, HX3 vs fixed, HX4 consistency). Wording,
+  thresholds, gates and acceptance rule are unchanged.
+- H's accuracy runs (2 jobs in parallel, as registered) are separate from T's timing runs (one job at a time).
